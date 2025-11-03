@@ -1,0 +1,21 @@
+{
+  "name": "dev-shopify-theme",
+  "private": true,
+  "version": "0.1.0",
+  "description": "Custom Shopify theme based on Dawn skeleton with Gulp build",
+  "scripts": {
+    "dev": "gulp",
+    "build": "gulp build"
+  },
+  "devDependencies": {
+    "autoprefixer": "^10.4.20",
+    "browser-sync": "^2.29.3",
+    "cssnano": "^6.1.2",
+    "gulp": "^4.0.2",
+    "gulp-esbuild": "^0.12.1",
+    "gulp-postcss": "^9.0.1",
+    "gulp-sass": "^5.1.0",
+    "sass": "^1.80.0"
+  }
+}
+

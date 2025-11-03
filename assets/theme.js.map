@@ -1,0 +1,7 @@
+{
+  "version": 3,
+  "sources": ["src/js/index.js"],
+  "sourcesContent": ["(() => {\r\n  document.addEventListener('DOMContentLoaded', () => {\r\n    // Example: simple focus style helper; replace with real modules later\r\n    const body = document.body;\r\n    function handleFirstTab(e) {\r\n      if (e.key === 'Tab') {\r\n        body.classList.add('user-is-tabbing');\r\n        window.removeEventListener('keydown', handleFirstTab);\r\n      }\r\n    }\r\n    window.addEventListener('keydown', handleFirstTab);\r\n  });\r\n})();\r\n\r\n\r\n"],
+  "mappings": ";;AAAA,GAAC,MAAM;AACL,aAAS,iBAAiB,oBAAoB,MAAM;AAElD,YAAM,OAAO,SAAS;AACtB,eAAS,eAAe,GAAG;AACzB,YAAI,EAAE,QAAQ,OAAO;AACnB,eAAK,UAAU,IAAI,iBAAiB;AACpC,iBAAO,oBAAoB,WAAW,cAAc;AAAA,QACtD;AAAA,MACF;AACA,aAAO,iBAAiB,WAAW,cAAc;AAAA,IACnD,CAAC;AAAA,EACH,GAAG;",
+  "names": []
+}
