@@ -1,34 +1,17 @@
-node_modules/
-dist/
-build/
-.tmp/
-coverage/
-
-# logs
-*.log
-npm-debug.log*
-
-# editors/OS
+# OS generated files #
+######################
 .DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
 Thumbs.db
-.idea/
-.vscode/
-*.swp
+node_modules/
 
-# env
-.env
-.env.*
+# Shopify CLI files
+.shopify/
 
-# shopify
-.shopify-cli.yml
-.cache/
-.theme-check.yml.cache
-
-# hosting
-.vercel/
-.netlify/
-
-# sass/maps
-.sass-cache/
-*.map
-
+## Release files
+release
+*.zip
