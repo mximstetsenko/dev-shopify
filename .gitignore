@@ -1,0 +1,34 @@
+node_modules/
+dist/
+build/
+.tmp/
+coverage/
+
+# logs
+*.log
+npm-debug.log*
+
+# editors/OS
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
+*.swp
+
+# env
+.env
+.env.*
+
+# shopify
+.shopify-cli.yml
+.cache/
+.theme-check.yml.cache
+
+# hosting
+.vercel/
+.netlify/
+
+# sass/maps
+.sass-cache/
+*.map
+
