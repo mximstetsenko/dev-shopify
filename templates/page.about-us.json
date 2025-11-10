@@ -1,3 +1,12 @@
+/*
+ * ------------------------------------------------------------
+ * IMPORTANT: The contents of this file are auto-generated.
+ *
+ * This file may be updated by the Shopify admin theme editor
+ * or related systems. Please exercise caution as any changes
+ * made to this file may be overwritten.
+ * ------------------------------------------------------------
+ */
 {
   "sections": {
     "about_hero": {
@@ -14,15 +23,42 @@
         "mobile_background_image": "shopify://shop_images/about-us-bg-mobile.png"
       }
     },
-    "main": {
-      "type": "page-content",
-      "settings": {
-        "show_title": true
-      }
+    "about_content_eiwGDf": {
+      "type": "about-content",
+      "blocks": {
+        "row_EUVq68": {
+          "type": "row",
+          "settings": {
+            "title": "Our Company",
+            "text": "<p>GOpure was launched by Bloc Enterprises, a specialized distribution & marketing company introducing consumer products distinguished by innovation, technology and disruptive solutions to everyday problems that improve the health and well-being of people and pets. The company strives to practice sustainability principles in all operations and be a good steward of the earth.<br/><br/>Like many amazing innovations, the inspiration for the GOpure Pod happened the instant its inventor in Ireland was determined to find a better solution after removing many dozens of used plastic water bottles from his car, most over half full. He was ashamed and disgusted by this wasteful consumption and inefficiency so he sought out world-renowned microbiologist, Dr Ronald Russell at Trinity College in Dublin, to help realize his vision of introducing a portable water purifier for everyday use and eliminate the need for single use plastic water bottles.</p>",
+            "image": "shopify://shop_images/about-content-img-1.png",
+            "image_alt": "about-content-img-company",
+            "image_position": "right",
+            "image_width": 50
+          }
+        },
+        "row_at4X9B": {
+          "type": "row",
+          "settings": {
+            "title": "About PuriBloc",
+            "text": "<p>PuriBloc is the innovative water purification, preservation technology inside GOpure, a portable, environmentally friendly Pod that keeps drinking water clean and safe, while also greatly improving taste. Within seconds, contaminants found in ordinary tap water are neutralized and the pH balance is optimized for healthy hydration. Unlike carbon water filters that only work once, PuriBloc technology works continuously through a natural process known as ionic exchange and keeps pure water fresh and great tasting for months.<br/><br/>The adsorptive power of GOpure’s advanced microporous ceramic core is mind-boggling due to the enormous surface area for its volume with which water can react. This high porosity surface area carries millions of negatively charged binding sites, which attract and adsorb heavy metals along with other chemical or organic impurities, including bacteria.<br/><br/>The GOpure Pod is changing the way the world drinks water by continually purifying and enhancing your drinking water on the go while also helping to save our planet: using one GOpure Pod in a personal re-usable bottle replaces 2,000 single-use water bottles with zero plastic waste.</p>",
+            "image": "shopify://shop_images/about-content-img-2.png",
+            "image_alt": "about-content-img-puribloc",
+            "image_position": "left",
+            "image_width": 50
+          }
+        }
+      },
+      "block_order": [
+        "row_EUVq68",
+        "row_at4X9B"
+      ],
+      "name": "About content",
+      "settings": {}
     }
   },
   "order": [
     "about_hero",
-    "main"
+    "about_content_eiwGDf"
   ]
 }
