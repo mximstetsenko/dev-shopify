@@ -11,11 +11,22 @@
   "sections": {
     "hero": {
       "type": "collection-hero",
-      "settings": {}
+      "settings": {
+        "image": "shopify://shop_images/collection-main-bg.png",
+        "image_mobile": "shopify://shop_images/collection-main-bg-mobile.png",
+        "title": "Men’s Crew Necks"
+      }
     },
     "products": {
       "type": "collection-products",
-      "settings": {}
+      "settings": {
+        "collection": "",
+        "show_filters": true,
+        "show_sort": true,
+        "columns_desktop": 3,
+        "columns_mobile": 1,
+        "products_per_page": 24
+      }
     }
   },
   "order": [
