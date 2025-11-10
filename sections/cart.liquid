@@ -1,37 +1,536 @@
-{% comment %}
-  This section is used in the cart template to render /cart page with an
-  overview of the items in customer's cart.
+<div class="home__container">
+  <div class="cart__header">
+    <h1 class="cart__title">Shopping Cart</h1>
+    {% if cart.item_count > 0 %}
+      <p class="cart__item-count">
+        {{ cart.item_count }}
+        {% if cart.item_count == 1 %}
+          item
+        {% else %}
+          items
+        {% endif %}
+      </p>
+    {% endif %}
+  </div>
 
-  https://shopify.dev/docs/storefronts/themes/architecture/templates/cart
-{% endcomment %}
+  {% if cart.item_count > 0 %}
+    <form action="{{ routes.cart_url }}" method="post" class="cart__form" data-cart-form>
+      <div class="cart__content">
+        <div class="cart__items">
+          {% for item in cart.items %}
+            <div class="cart__item" data-cart-item data-item-key="{{ item.key }}">
+              <div class="cart__item-image">
+                <a href="{{ item.url }}" aria-label="{{ item.product.title | escape }}">
+                  {% if item.image %}
+                    {{
+                      item.image
+                      | image_url: width: 200
+                      | image_tag: loading: 'lazy', alt: item.image.alt
+                      | default: item.product.title, width: item.image.width, height: item.image.height
+                    }}
+                  {% else %}
+                    {{ 'product-1' | placeholder_svg_tag: 'cart__item-placeholder' }}
+                  {% endif %}
+                </a>
+              </div>
 
-<h1>{{ 'cart.title' | t }}</h1>
+              <div class="cart__item-details">
+                <div class="cart__item-header">
+                  <h3 class="cart__item-title">
+                    <a href="{{ item.url }}">{{ item.product.title }}</a>
+                  </h3>
+                  <button
+                    type="button"
+                    class="cart__item-remove"
+                    data-cart-remove
+                    data-item-key="{{ item.key }}"
+                    aria-label="Remove {{ item.product.title | escape }}"
+                  >
+                    <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
+                      <path d="M15 5L5 15M5 5L15 15" stroke="#212322" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" />
+                    </svg>
+                  </button>
+                </div>
 
-<form action="{{ routes.cart_url }}" method="post">
-  <table>
-    {% for item in cart.items %}
-      <tr>
-        <td>
-          {% render 'image', image: item.image, url: item.url %}
-        </td>
-        <td>
-          <p>{{ item.product.title }}</p>
-          {{ 'cart.remove' | t | link_to: item.url_to_remove }}
-        </td>
-        <td>
-          <input type="text" name="updates[]" value="{{ item.quantity }}">
-          <input type="submit" value="{{ 'cart.update' | t }}">
-        </td>
-      </tr>
-    {% endfor %}
-  </table>
+                {% unless item.product.has_only_default_variant %}
+                  <div class="cart__item-variant">
+                    {% for option in item.options_with_values %}
+                      <span class="cart__item-option"> {{ option.name }}: {{ option.value }} </span>
+                    {% endfor %}
+                  </div>
+                {% endunless %}
 
-  <input type="submit" name="checkout" value="{{ 'cart.checkout' | t }}">
-</form>
+                <div class="cart__item-price-wrapper">
+                  {% if item.original_price != item.final_price %}
+                    <span class="cart__item-price cart__item-price--compare">
+                      {{ item.original_price | money }}
+                    </span>
+                  {% endif %}
+                  <span class="cart__item-price cart__item-price--final">
+                    {{ item.final_price | money }}
+                  </span>
+                </div>
+
+                <div class="cart__item-quantity">
+                  <label for="quantity-{{ item.key }}" class="cart__item-quantity-label">Quantity</label>
+                  <div class="cart__item-quantity-selector">
+                    <button
+                      type="button"
+                      class="cart__item-quantity-btn cart__item-quantity-btn--decrease"
+                      data-cart-quantity-decrease
+                      data-item-key="{{ item.key }}"
+                      aria-label="Decrease quantity"
+                    >
+                      <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M4.3335 8H11.6668" stroke="#212322" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" />
+                      </svg>
+                    </button>
+                    <input
+                      type="number"
+                      id="quantity-{{ item.key }}"
+                      name="updates[]"
+                      value="{{ item.quantity }}"
+                      min="0"
+                      max="99"
+                      class="cart__item-quantity-input"
+                      data-cart-quantity-input
+                      data-item-key="{{ item.key }}"
+                      aria-label="Quantity for {{ item.product.title | escape }}"
+                    >
+                    <button
+                      type="button"
+                      class="cart__item-quantity-btn cart__item-quantity-btn--increase"
+                      data-cart-quantity-increase
+                      data-item-key="{{ item.key }}"
+                      aria-label="Increase quantity"
+                    >
+                      <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M2.5 8H13.5" stroke="#212322" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" />
+                        <path d="M8 2.5V13.5" stroke="#212322" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" />
+                      </svg>
+                    </button>
+                  </div>
+                </div>
+              </div>
+
+              <div class="cart__item-line-price">
+                <span class="cart__item-line-price-label">Total</span>
+                <span class="cart__item-line-price-value" data-cart-item-total>
+                  {{ item.final_line_price | money }}
+                </span>
+              </div>
+            </div>
+          {% endfor %}
+        </div>
+
+        <div class="cart__sidebar">
+          <div class="cart__summary">
+            <div class="cart__summary-row">
+              <span class="cart__summary-label">Subtotal</span>
+              <span class="cart__summary-value" data-cart-subtotal>
+                {{ cart.total_price | money }}
+              </span>
+            </div>
+
+            {% if cart.cart_level_discount_applications.size > 0 %}
+              <div class="cart__summary-row cart__summary-row--discount">
+                <span class="cart__summary-label">
+                  Discount
+                  {% for discount in cart.cart_level_discount_applications %}
+                    ({{ discount.title }})
+                  {% endfor %}
+                </span>
+                <span class="cart__summary-value cart__summary-value--discount">
+                  -{{ cart.total_discount | money }}
+                </span>
+              </div>
+            {% endif %}
+
+            <div class="cart__summary-row cart__summary-row--total">
+              <span class="cart__summary-label">Total</span>
+              <span class="cart__summary-value cart__summary-value--total" data-cart-total>
+                {{ cart.total_price | money }}
+              </span>
+            </div>
+          </div>
+
+          <div class="cart__discount">
+            <details class="cart__discount-details">
+              <summary class="cart__discount-summary">
+                <span>Have a discount code?</span>
+                <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <path d="M13 5.99994L8 10.9999L3 5.99994" stroke="#212322" stroke-linecap="round" stroke-linejoin="round" />
+                </svg>
+              </summary>
+              <div class="cart__discount-form-wrapper">
+                <form action="{{ routes.cart_url }}" method="post" class="cart__discount-form" data-discount-form>
+                  <input
+                    type="text"
+                    name="discount"
+                    placeholder="Enter discount code"
+                    class="cart__discount-input"
+                    data-discount-input
+                  >
+                  <button type="submit" class="cart__discount-btn">Apply</button>
+                </form>
+              </div>
+            </details>
+          </div>
+
+          <div class="cart__actions">
+            <button type="submit" name="checkout" class="cart__checkout-btn" data-cart-checkout>
+              Proceed to Checkout
+            </button>
+            <a href="{{ routes.all_products_collection_url }}" class="cart__continue-shopping"> Continue Shopping </a>
+          </div>
+
+          {% if cart.cart_level_discount_applications.size > 0 %}
+            <div class="cart__discount-applied">
+              <p class="cart__discount-applied-text">
+                {% for discount in cart.cart_level_discount_applications %}
+                  <strong>{{ discount.title }}</strong> discount applied
+                {% endfor %}
+              </p>
+            </div>
+          {% endif %}
+        </div>
+      </div>
+    </form>
+  {% else %}
+    <div class="cart__empty">
+      <div class="cart__empty-icon">
+        <img src="{{ 'cart-empty-icon.png' | asset_url }}" alt="Cart Empty" width="80" height="80">
+      </div>
+      <h2 class="cart__empty-title">Your cart is empty</h2>
+      <p class="cart__empty-text">Looks like you haven't added anything to your cart yet.</p>
+      <a href="{{ routes.all_products_collection_url }}" class="cart__empty-btn"> Continue Shopping </a>
+    </div>
+  {% endif %}
+</div>
+
+{% comment %} Custom Delete Confirmation Modal {% endcomment %}
+<div class="cart__delete-modal" data-cart-delete-modal aria-hidden="true">
+  <div class="cart__delete-modal-overlay" data-cart-delete-modal-close></div>
+  <div class="cart__delete-modal-content">
+    <div class="cart__delete-modal-header">
+      <h3 class="cart__delete-modal-title">Remove Item</h3>
+      <button
+        type="button"
+        class="cart__delete-modal-close"
+        data-cart-delete-modal-close
+        aria-label="Close"
+      >
+        <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <path d="M15 5L5 15M5 5L15 15" stroke="#212322" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" />
+        </svg>
+      </button>
+    </div>
+    <div class="cart__delete-modal-body">
+      <p class="cart__delete-modal-text">Are you sure you want to remove this item from your cart?</p>
+      <div class="cart__delete-modal-item" data-cart-delete-modal-item>
+        <div class="cart__delete-modal-item-image"></div>
+        <div class="cart__delete-modal-item-details">
+          <p class="cart__delete-modal-item-title"></p>
+          <p class="cart__delete-modal-item-variant"></p>
+        </div>
+      </div>
+    </div>
+    <div class="cart__delete-modal-footer">
+      <button
+        type="button"
+        class="cart__delete-modal-btn cart__delete-modal-btn--cancel"
+        data-cart-delete-modal-close
+      >
+        Cancel
+      </button>
+      <button
+        type="button"
+        class="cart__delete-modal-btn cart__delete-modal-btn--confirm"
+        data-cart-delete-modal-confirm
+      >
+        Remove
+      </button>
+    </div>
+  </div>
+</div>
+
+<script>
+  (function () {
+    'use strict';
+
+    const cartForm = document.querySelector('[data-cart-form]');
+    if (!cartForm) return;
+
+    let isUpdating = false;
+
+    // Update cart via AJAX using item keys
+    async function updateCartItem(key, quantity) {
+      if (isUpdating) return;
+      isUpdating = true;
+
+      try {
+        const response = await fetch('/cart/change.js', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            id: key,
+            quantity: quantity,
+          }),
+        });
+
+        if (!response.ok) {
+          const errorData = await response.json().catch(() => ({}));
+          throw new Error(errorData.description || errorData.message || 'Failed to update cart');
+        }
+
+        const cart = await response.json();
+        return cart;
+      } catch (error) {
+        console.error('Cart update error:', error);
+        throw error;
+      } finally {
+        isUpdating = false;
+      }
+    }
+
+    // Remove item from cart
+    async function removeItem(key) {
+      if (isUpdating) return;
+      isUpdating = true;
+
+      try {
+        const response = await fetch('/cart/change.js', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            id: key,
+            quantity: 0,
+          }),
+        });
+
+        if (!response.ok) {
+          throw new Error('Failed to remove item');
+        }
+
+        const cart = await response.json();
+        return cart;
+      } catch (error) {
+        console.error('Remove item error:', error);
+        throw error;
+      } finally {
+        isUpdating = false;
+      }
+    }
+
+    // Refresh cart data
+    async function refreshCart() {
+      try {
+        const response = await fetch('/cart.js');
+        if (!response.ok) throw new Error('Failed to fetch cart');
+        return await response.json();
+      } catch (error) {
+        console.error('Fetch cart error:', error);
+        throw error;
+      }
+    }
+
+    // Update cart UI
+    function updateCartUI(cart) {
+      // Update item count in header
+      if (typeof window.updateCartCount === 'function') {
+        window.updateCartCount({ item_count: cart.item_count });
+      }
+
+      // Reload page to show updated cart
+      window.location.reload();
+    }
+
+    // Handle quantity decrease
+    document.querySelectorAll('[data-cart-quantity-decrease]').forEach((btn) => {
+      btn.addEventListener('click', async function () {
+        const itemKey = this.dataset.itemKey;
+        const input = document.querySelector(`[data-cart-quantity-input][data-item-key="${itemKey}"]`);
+        if (!input) return;
+
+        const currentQty = parseInt(input.value) || 0;
+        const newQty = Math.max(0, currentQty - 1);
+
+        if (newQty === 0) {
+          // Remove item
+          try {
+            const cart = await removeItem(itemKey);
+            updateCartUI(cart);
+          } catch (error) {
+            alert('Failed to remove item. Please try again.');
+          }
+        } else {
+          // Update quantity
+          try {
+            const cart = await updateCartItem(itemKey, newQty);
+            updateCartUI(cart);
+          } catch (error) {
+            alert(error.message || 'Failed to update quantity. Please try again.');
+          }
+        }
+      });
+    });
+
+    // Handle quantity increase
+    document.querySelectorAll('[data-cart-quantity-increase]').forEach((btn) => {
+      btn.addEventListener('click', async function () {
+        const itemKey = this.dataset.itemKey;
+        const input = document.querySelector(`[data-cart-quantity-input][data-item-key="${itemKey}"]`);
+        if (!input) return;
+
+        const currentQty = parseInt(input.value) || 0;
+        const newQty = Math.min(99, currentQty + 1);
+
+        try {
+          const cart = await updateCartItem(itemKey, newQty);
+          updateCartUI(cart);
+        } catch (error) {
+          alert(error.message || 'Failed to update quantity. Please try again.');
+        }
+      });
+    });
+
+    // Handle quantity input change
+    document.querySelectorAll('[data-cart-quantity-input]').forEach((input) => {
+      input.addEventListener('change', async function () {
+        const itemKey = this.dataset.itemKey;
+        const newQty = parseInt(this.value) || 0;
+
+        if (newQty === 0) {
+          try {
+            const cart = await removeItem(itemKey);
+            updateCartUI(cart);
+          } catch (error) {
+            alert('Failed to remove item. Please try again.');
+          }
+        } else {
+          try {
+            const cart = await updateCartItem(itemKey, Math.min(99, newQty));
+            updateCartUI(cart);
+          } catch (error) {
+            alert(error.message || 'Failed to update quantity. Please try again.');
+          }
+        }
+      });
+    });
+
+    // Custom delete modal
+    const deleteModal = document.querySelector('[data-cart-delete-modal]');
+    const deleteModalClose = document.querySelectorAll('[data-cart-delete-modal-close]');
+    const deleteModalConfirm = document.querySelector('[data-cart-delete-modal-confirm]');
+    const deleteModalItem = document.querySelector('[data-cart-delete-modal-item]');
+    let pendingDeleteKey = null;
+    let pendingDeleteElement = null;
+
+    function openDeleteModal(itemKey, itemElement) {
+      if (!deleteModal) return;
+
+      pendingDeleteKey = itemKey;
+      pendingDeleteElement = itemElement;
+
+      // Get item details
+      const itemCard = itemElement.closest('[data-cart-item]');
+      const itemTitle = itemCard.querySelector('.cart__item-title a')?.textContent || '';
+      const itemVariant = itemCard.querySelector('.cart__item-option')?.textContent || '';
+      const itemImage = itemCard.querySelector('.cart__item-image img');
+
+      // Update modal content
+      const modalTitle = deleteModalItem.querySelector('.cart__delete-modal-item-title');
+      const modalVariant = deleteModalItem.querySelector('.cart__delete-modal-item-variant');
+      const modalImage = deleteModalItem.querySelector('.cart__delete-modal-item-image');
+
+      if (modalTitle) modalTitle.textContent = itemTitle;
+      if (modalVariant) modalVariant.textContent = itemVariant || '';
+
+      if (modalImage && itemImage) {
+        modalImage.innerHTML = '';
+        const img = itemImage.cloneNode(true);
+        img.style.width = '100%';
+        img.style.height = '100%';
+        img.style.objectFit = 'cover';
+        modalImage.appendChild(img);
+      } else if (modalImage) {
+        modalImage.innerHTML = '';
+      }
+
+      // Show modal
+      deleteModal.setAttribute('aria-hidden', 'false');
+      deleteModal.classList.add('cart__delete-modal--active');
+      document.body.style.overflow = 'hidden';
+    }
+
+    function closeDeleteModal() {
+      if (!deleteModal) return;
+
+      deleteModal.setAttribute('aria-hidden', 'true');
+      deleteModal.classList.remove('cart__delete-modal--active');
+      document.body.style.overflow = '';
+
+      pendingDeleteKey = null;
+      pendingDeleteElement = null;
+    }
+
+    // Close modal handlers
+    deleteModalClose.forEach((btn) => {
+      btn.addEventListener('click', closeDeleteModal);
+    });
+
+    // Confirm delete
+    if (deleteModalConfirm) {
+      deleteModalConfirm.addEventListener('click', async function () {
+        if (!pendingDeleteKey) return;
+
+        const itemKey = pendingDeleteKey;
+        closeDeleteModal();
+
+        try {
+          const cart = await removeItem(itemKey);
+          updateCartUI(cart);
+        } catch (error) {
+          alert('Failed to remove item. Please try again.');
+        }
+      });
+    }
+
+    // Close on Escape key
+    document.addEventListener('keydown', function (e) {
+      if (e.key === 'Escape' && deleteModal && deleteModal.classList.contains('cart__delete-modal--active')) {
+        closeDeleteModal();
+      }
+    });
+
+    // Handle remove button
+    document.querySelectorAll('[data-cart-remove]').forEach((btn) => {
+      btn.addEventListener('click', function () {
+        const itemKey = this.dataset.itemKey;
+        openDeleteModal(itemKey, this);
+      });
+    });
+
+    // Handle discount form
+    const discountForm = document.querySelector('[data-discount-form]');
+    if (discountForm) {
+      discountForm.addEventListener('submit', function (e) {
+        // Let form submit normally for discount codes
+        // Shopify will handle the discount application
+      });
+    }
+  })();
+</script>
 
 {% schema %}
 {
-  "name": "t:general.cart",
+  "name": "Cart",
+  "tag": "section",
+  "class": "cart-section",
   "settings": []
 }
 {% endschema %}

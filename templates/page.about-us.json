@@ -1,0 +1,28 @@
+{
+  "sections": {
+    "about_hero": {
+      "type": "about-hero",
+      "settings": {
+        "title_line1": "Make a",
+        "title_line2_left": "great",
+        "title_line2_right": "First",
+        "title_line3": "Impression",
+        "subheading": "<p>Add images and text to give focus to your chosen product, collection, or blog post</p>",
+        "button_label": "Shop Now",
+        "button_link": "",
+        "background_image": "shopify://shop_images/about-us-bg.png",
+        "mobile_background_image": "shopify://shop_images/about-us-bg-mobile.png"
+      }
+    },
+    "main": {
+      "type": "page-content",
+      "settings": {
+        "show_title": true
+      }
+    }
+  },
+  "order": [
+    "about_hero",
+    "main"
+  ]
+}

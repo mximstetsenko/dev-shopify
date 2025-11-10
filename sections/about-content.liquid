@@ -1,0 +1,72 @@
+<div class="container about__company-container">
+  {% for block in section.blocks %}
+    {% assign img_side = block.settings.image_position %}
+    {% assign img_width = block.settings.image_width | append: '%' %}
+    {% assign text_width = 100 | minus: block.settings.image_width | append: '%' %}
+
+    <article class="about__company-item about__company-item--{{ img_side }}" {{ block.shopify_attributes }}>
+      <div class="about__company-item-media">
+        {% if block.settings.image %}
+          {{
+            block.settings.image
+            | image_url: width: 1200
+            | image_tag: alt: block.settings.image_alt, loading: 'lazy', class: 'about__company-item-img'
+          }}
+        {% endif %}
+      </div>
+
+      <div class="about__company-item-wrapper">
+        {% if block.settings.title != blank %}
+          <h2 class="about__company-item-title">{{ block.settings.title | escape }}</h2>
+        {% endif %}
+
+        {% if block.settings.text != blank %}
+          <div class="about__company-item-text">{{ block.settings.text }}</div>
+        {% endif %}
+      </div>
+    </article>
+  {% endfor %}
+</div>
+
+{% schema %}
+{
+  "name": "About content",
+  "tag": "section",
+  "class": "section about__company",
+  "settings": [],
+  "blocks": [
+    {
+      "type": "row",
+      "name": "Row",
+      "settings": [
+        { "type": "text", "id": "title", "label": "Title", "default": "Our Company" },
+        { "type": "richtext", "id": "text", "label": "Text", "default": "<p>Add your brand story here.</p>" },
+        { "type": "image_picker", "id": "image", "label": "Image" },
+        { "type": "text", "id": "image_alt", "label": "Image alt" },
+        {
+          "type": "select",
+          "id": "image_position",
+          "label": "Image position",
+          "options": [
+            { "value": "left", "label": "Left" },
+            { "value": "right", "label": "Right" }
+          ],
+          "default": "right"
+        },
+        {
+          "type": "range",
+          "id": "image_width",
+          "label": "Image width (desktop)",
+          "min": 30,
+          "max": 70,
+          "step": 5,
+          "default": 50,
+          "unit": "%"
+        }
+      ]
+    }
+  ],
+  "max_blocks": 10,
+  "presets": [{ "name": "About content", "blocks": [{ "type": "row" }] }]
+}
+{% endschema %}

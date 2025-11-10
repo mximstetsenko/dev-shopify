@@ -1,57 +1,141 @@
-<footer>
-  <div class="footer__copyright">
-    &copy;
-    {{ 'now' | date: '%Y' }}
-    {{ shop.name | link_to: routes.root_url }}, {{ powered_by_link }}
+<footer class="site-footer full-width">
+  <div class="footer__decor-left">
+    {{ 'footer-decore-left.svg' | inline_asset_content }}
   </div>
 
-  <div class="footer__links">
-    {% for link in section.settings.menu.links %}
-      {{ link.title | link_to: link.url }}
-    {% endfor %}
+  <div class="footer__decor-right">
+    {{ 'footer-decore-right.svg' | inline_asset_content }}
   </div>
 
-  <div class="footer__payment">
-    {% if section.settings.show_payment_icons %}
-      {% for type in shop.enabled_payment_types %}
-        {{ type | payment_type_svg_tag }}
-      {% endfor %}
-    {% endif %}
+  <div class="home__container footer__inner">
+    <div class="footer__grid">
+      <div class="footer__col">
+        {% if section.settings.shop_title != blank %}
+          <h3 class="footer__title">{{ section.settings.shop_title }}</h3>
+        {% endif %}
+        {% if section.settings.shop_menu %}
+          <ul class="footer__menu">
+            {% for link in section.settings.shop_menu.links %}
+              <li>{{ link.title | link_to: link.url }}</li>
+            {% endfor %}
+          </ul>
+        {% endif %}
+      </div>
+
+      <div class="footer__col">
+        {% if section.settings.contact_title != blank %}
+          <h3 class="footer__title">{{ section.settings.contact_title }}</h3>
+        {% endif %}
+        <ul class="footer__list">
+          {% if section.settings.contact_address != blank %}
+            <li>{{ section.settings.contact_address }}</li>
+          {% endif %}
+          {% if section.settings.contact_city != blank %}
+            <li>{{ section.settings.contact_city }}</li>
+          {% endif %}
+          {% if section.settings.contact_phone != blank %}
+            <li>{{ section.settings.contact_phone }}</li>
+          {% endif %}
+        </ul>
+      </div>
+
+      <div class="footer__col">
+        {% if section.settings.info_title != blank %}
+          <h3 class="footer__title">{{ section.settings.info_title }}</h3>
+        {% endif %}
+        {% if section.settings.info_menu %}
+          <ul class="footer__menu">
+            {% for link in section.settings.info_menu.links %}
+              <li>{{ link.title | link_to: link.url }}</li>
+            {% endfor %}
+          </ul>
+        {% endif %}
+      </div>
+
+      <div class="footer__col">
+        {% if section.settings.news_title != blank %}
+          <h3 class="footer__title">{{ section.settings.news_title }}</h3>
+        {% endif %}
+        {% if section.settings.news_placeholder != blank %}
+          <form action="{{ routes.search_url }}" method="get" class="footer__newsletter" novalidate>
+            <input type="email" name="email" placeholder="{{ section.settings.news_placeholder }}" aria-label="Email">
+            <button class="footer__newsletter-submit" type="submit" aria-label="Submit">
+              {{ 'footer-form-icon-btn.svg' | inline_asset_content }}
+            </button>
+          </form>
+        {% endif %}
+        <div class="footer__socials">
+          {% if section.settings.social_linkedin != blank %}
+            <a class="footer__social-link" href="{{ section.settings.social_linkedin }}" aria-label="LinkedIn">
+              {{- 'footer-linkedin.svg' | inline_asset_content -}}
+            </a>
+          {% else %}
+            <span aria-label="LinkedIn">{{ 'footer-linkedin.svg' | inline_asset_content }}</span>
+          {% endif %}
+
+          {% if section.settings.social_facebook != blank %}
+            <a class="footer__social-link" href="{{ section.settings.social_facebook }}" aria-label="Facebook">
+              {{- 'footer-facebook.svg' | inline_asset_content -}}
+            </a>
+          {% else %}
+            <span aria-label="Facebook">{{ 'footer-facebook.svg' | inline_asset_content }}</span>
+          {% endif %}
+
+          {% if section.settings.social_instagram != blank %}
+            <a class="footer__social-link" href="{{ section.settings.social_instagram }}" aria-label="Instagram">
+              {{- 'footer-instagram.svg' | inline_asset_content -}}
+            </a>
+          {% else %}
+            <span aria-label="Instagram">{{ 'footer-instagram.svg' | inline_asset_content }}</span>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+
+    <div class="footer__brand">
+      <a href="{{ routes.root_url }}" class="footer__logo" aria-label="{{ shop.name }}">
+        <span class="footer__logo-text">
+          <span class="footer__logo-text__primary">FOCUSED</span>
+          <span class="footer__logo-text__secondary" aria-hidden="true">FITS</span>
+        </span>
+
+        {% if section.settings.logo_mobile %}
+          <span class="footer__logo-image">
+            {{ section.settings.logo_mobile | image_url: width: 320 | image_tag: alt: shop.name, loading: 'lazy' }}
+          </span>
+        {% endif %}
+      </a>
+      <div class="footer__copyright">
+        &copy; {{ 'now' | date: '%Y' }}
+        {{ shop.name }} | All Rights Reserved.
+      </div>
+    </div>
   </div>
 </footer>
-
-{% stylesheet %}
-  footer {
-    display: flex;
-    justify-content: space-between;
-    margin-top: 2rem;
-  }
-  footer a {
-    text-decoration: none;
-    color: var(--color-foreground);
-  }
-  footer .footer__links,
-  footer .footer__payment {
-    display: flex;
-    gap: 1rem;
-  }
-{% endstylesheet %}
 
 {% schema %}
 {
   "name": "t:general.footer",
   "settings": [
-    {
-      "type": "link_list",
-      "id": "menu",
-      "label": "t:labels.menu"
-    },
-    {
-      "type": "checkbox",
-      "id": "show_payment_icons",
-      "label": "t:labels.show_payment_icons",
-      "default": true
-    }
+    { "type": "image_picker", "id": "logo_mobile", "label": "Logo (mobile)" },
+
+    { "type": "text", "id": "shop_title", "label": "Column title (shop)", "default": "SHOP" },
+    { "type": "link_list", "id": "shop_menu", "label": "Shop menu" },
+
+    { "type": "text", "id": "contact_title", "label": "Column title (contact)", "default": "CONTACT" },
+    { "type": "text", "id": "contact_address", "label": "Address", "default": "Palm St, 456" },
+    { "type": "text", "id": "contact_city", "label": "City", "default": "London, UK" },
+    { "type": "text", "id": "contact_phone", "label": "Phone", "default": "+ (345) 789 89 98" },
+
+    { "type": "text", "id": "info_title", "label": "Column title (more info)", "default": "MORE INFO" },
+    { "type": "link_list", "id": "info_menu", "label": "Info menu" },
+
+    { "type": "text", "id": "news_title", "label": "Column title (newsletter)", "default": "GET 10% OF CASHBACK" },
+    { "type": "text", "id": "news_placeholder", "label": "Newsletter placeholder", "default": "Your E-mail" },
+
+    { "type": "url", "id": "social_linkedin", "label": "LinkedIn URL" },
+    { "type": "url", "id": "social_facebook", "label": "Facebook URL" },
+    { "type": "url", "id": "social_instagram", "label": "Instagram URL" }
   ]
 }
 {% endschema %}

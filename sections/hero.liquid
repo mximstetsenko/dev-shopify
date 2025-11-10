@@ -1,0 +1,76 @@
+{% if section.settings.background_image %}
+  <div class="home__background">
+    <picture>
+      {% if section.settings.mobile_background_image %}
+        <source
+          media="(max-width: 768px)"
+          srcset="{{ section.settings.mobile_background_image | image_url: width: 1200 }}"
+        >
+      {% endif %}
+      {{
+        section.settings.background_image
+        | image_url: width: 2400
+        | image_tag: loading: 'lazy', alt: 'Hero Background'
+      }}
+    </picture>
+  </div>
+{% endif %}
+
+<div class="home__container">
+  <div class="home__content">
+    <h1 class="home__content-title">
+      {% if section.settings.title_line1 != blank %}
+        <span class="home__content-title-line">{{ section.settings.title_line1 | escape }}</span>
+      {% endif %}
+      {% if section.settings.title_line2_left != blank or section.settings.title_line2_right != blank %}
+        <span class="home__content-title-line home__content-title-line--row">
+          {% if section.settings.title_line2_left != blank %}
+            <span class="home__content-title-part is-light">{{ section.settings.title_line2_left | escape }}</span>
+          {% endif %}
+          {% if section.settings.title_line2_right != blank %}
+            <span class="home__content-title-part">{{ section.settings.title_line2_right | escape }}</span>
+          {% endif %}
+        </span>
+      {% endif %}
+      {% if section.settings.title_line3 != blank %}
+        <span class="home__content-title-line">{{ section.settings.title_line3 | escape }}</span>
+      {% endif %}
+    </h1>
+
+    {% if section.settings.subheading != blank %}
+      <p class="home__content-txt">{{ section.settings.subheading | strip_html }}</p>
+    {% endif %}
+
+    {% if section.settings.button_label != blank %}
+      <a href="{{ section.settings.button_link | default: '#' }}" class="home__content-btn">
+        {{- section.settings.button_label -}}
+      </a>
+    {% endif %}
+  </div>
+</div>
+
+{% schema %}
+{
+  "name": "Hero",
+  "tag": "section",
+  "class": "section home__section home",
+  "settings": [
+    { "type": "text", "id": "title_line1", "label": "Title line 1", "default": "MAKE A" },
+    { "type": "text", "id": "title_line2_left", "label": "Title line 2 (left)", "default": "GREAT" },
+    { "type": "text", "id": "title_line2_right", "label": "Title line 2 (right)", "default": "FIRST" },
+    { "type": "text", "id": "title_line3", "label": "Title line 3", "default": "IMPRESSION" },
+    {
+      "type": "richtext",
+      "id": "subheading",
+      "label": "Subheading",
+      "default": "<p>Add images and text to give focus to your chosen product, collection, or blog post</p>"
+    },
+    { "type": "text", "id": "button_label", "label": "Button label", "default": "Shop Now" },
+    { "type": "url", "id": "button_link", "label": "Button link" },
+    { "type": "image_picker", "id": "background_image", "label": "Background image (desktop)" },
+    { "type": "image_picker", "id": "mobile_background_image", "label": "Background image (mobile)" }
+  ],
+  "enabled_on": { "templates": ["index"] },
+  "presets": [{ "name": "Hero", "category": "Banners" }]
+}
+{% endschema %}

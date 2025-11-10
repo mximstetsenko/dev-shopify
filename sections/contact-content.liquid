@@ -1,0 +1,177 @@
+<div class="container contact__content-container">
+  <div class="contact__content-wrapper">
+    {% comment %} Intro/Description blocks {% endcomment %}
+    {% assign intro_blocks = section.blocks | where: 'type', 'intro' %}
+    {% for block in intro_blocks %}
+      {% if block.settings.text != blank %}
+        <h3 class="contact__content-description" {{ block.shopify_attributes }}>
+          {{ block.settings.text | strip_html }}
+        </h3>
+      {% endif %}
+    {% endfor %}
+
+    {% comment %} Email blocks {% endcomment %}
+    {% assign email_blocks = section.blocks | where: 'type', 'email' %}
+    {% if email_blocks.size > 0 %}
+      <div class="contact__content-info">
+        <svg width="47" height="32" viewBox="0 0 47 32" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <g clip-path="url(#clip0_2166_1719)">
+            <path d="M31.1548 16.2247L46.9996 25.5706V6.48413L31.1548 16.2247Z" fill="#404040" />
+            <path d="M0 6.48413V25.5706L15.8449 16.2247L0 6.48413Z" fill="#404040" />
+            <path d="M44.0618 0.925903H2.93678C1.47096 0.925903 0.307715 1.94546 0.0874023 3.25827L23.4993 17.6499L46.9111 3.25827C46.6908 1.94546 45.5276 0.925903 44.0618 0.925903Z" fill="#404040" />
+            <path d="M28.4649 17.8801L24.3083 20.4345C24.0615 20.5852 23.7825 20.6592 23.5005 20.6592C23.2185 20.6592 22.9394 20.5852 22.6927 20.4345L18.5361 17.8774L0.0944824 28.7609C0.32067 30.0627 1.47804 31.074 2.93798 31.074H44.063C45.5229 31.074 46.6803 30.0627 46.9065 28.7609L28.4649 17.8801Z" fill="#404040" />
+          </g>
+          <defs>
+            <clipPath id="clip0_2166_1719">
+              <rect width="47" height="32" fill="white" />
+            </clipPath>
+          </defs>
+        </svg>
+
+        <div class="contact__content-info-wrapper">
+          {% for block in email_blocks %}
+            <div class="contact__content-info-item" {{ block.shopify_attributes }}>
+              {% if block.settings.title != blank %}
+                <p class="contact__content-info-title">{{ block.settings.title | escape }}</p>
+              {% endif %}
+              {% if block.settings.email != blank %}
+                <a class="contact__content-info-value" href="mailto:{{ block.settings.email | escape }}">
+                  {{- block.settings.email | escape -}}
+                </a>
+              {% endif %}
+            </div>
+          {% endfor %}
+        </div>
+      </div>
+    {% endif %}
+
+    {% comment %} Address blocks {% endcomment %}
+    {% assign address_blocks = section.blocks | where: 'type', 'address' %}
+    {% if address_blocks.size > 0 %}
+      {% for block in address_blocks %}
+        <div class="contact__content-location" {{ block.shopify_attributes }}>
+          <svg width="36" height="32" viewBox="0 0 36 32" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <g clip-path="url(#clip0_2166_1756)">
+              <path d="M28.6585 5.47978C26.4736 2.12828 22.593 0.0807202 18.2775 0.00247021C18.0933 -0.000904785 17.9079 -0.000904785 17.7236 0.00247021C13.4082 0.0807202 9.52756 2.12828 7.34267 5.47978C5.10941 8.90553 5.0483 13.0205 7.17919 16.4875L16.1063 31.0117C16.1103 31.0181 16.1143 31.0245 16.1184 31.0309C16.5112 31.6377 17.2148 32 18.0007 32C18.7865 32 19.4901 31.6376 19.8828 31.0309C19.887 31.0245 19.891 31.0181 19.895 31.0117L28.8221 16.4875C30.9528 13.0205 30.8917 8.90553 28.6585 5.47978ZM18.0006 14.5C15.2091 14.5 12.9381 12.4813 12.9381 9.99997C12.9381 7.51866 15.2091 5.49997 18.0006 5.49997C20.792 5.49997 23.0631 7.51866 23.0631 9.99997C23.0631 12.4813 20.7921 14.5 18.0006 14.5Z" fill="#4F4F4F" />
+            </g>
+            <defs>
+              <clipPath id="clip0_2166_1756">
+                <rect width="36" height="32" fill="white" />
+              </clipPath>
+            </defs>
+          </svg>
+
+          <div class="contact__content-location-wrapper">
+            {% if block.settings.title != blank %}
+              <p class="contact__content-location-text">{{ block.settings.title | escape }}</p>
+            {% endif %}
+            {% if block.settings.address != blank %}
+              <p class="contact__content-location-address">{{ block.settings.address | escape }}</p>
+            {% endif %}
+          </div>
+        </div>
+      {% endfor %}
+    {% endif %}
+  </div>
+</div>
+
+{% schema %}
+{
+  "name": "Contact content",
+  "tag": "section",
+  "class": "section contact__content-section",
+  "settings": [],
+  "blocks": [
+    {
+      "type": "intro",
+      "name": "Intro text",
+      "settings": [
+        {
+          "type": "richtext",
+          "id": "text",
+          "label": "Text",
+          "default": "<p></p>"
+        }
+      ]
+    },
+    {
+      "type": "email",
+      "name": "Email",
+      "settings": [
+        {
+          "type": "text",
+          "id": "title",
+          "label": "Title",
+          "default": "For customer support:"
+        },
+        {
+          "type": "text",
+          "id": "email",
+          "label": "Email address",
+          "default": "contact@gopurepod.com"
+        }
+      ]
+    },
+    {
+      "type": "address",
+      "name": "Address",
+      "settings": [
+        {
+          "type": "text",
+          "id": "title",
+          "label": "Title",
+          "default": "Mailing Address:"
+        },
+        {
+          "type": "textarea",
+          "id": "address",
+          "label": "Address",
+          "default": "Bloc Enterprises, LLC\n11 Grumman Hill Road, Suite 1A\nWilton, CT 06897"
+        }
+      ]
+    }
+  ],
+  "max_blocks": 20,
+  "presets": [
+    {
+      "name": "Contact content",
+      "blocks": [
+        {
+          "type": "intro",
+          "settings": {
+            "text": "<p>We appreciate your business and want to ensure you are satisfied with your GOpure product! Please contact us with any questions you have about the product, or if we can help you in any way.</p>"
+          }
+        },
+        {
+          "type": "email",
+          "settings": {
+            "title": "For customer support:",
+            "email": "contact@gopurepod.com"
+          }
+        },
+        {
+          "type": "email",
+          "settings": {
+            "title": "For sales inquiries:",
+            "email": "jim@blocenterprises.com"
+          }
+        },
+        {
+          "type": "email",
+          "settings": {
+            "title": "For press inquiries:",
+            "email": "info@blocenterprises.com"
+          }
+        },
+        {
+          "type": "address",
+          "settings": {
+            "title": "Mailing Address:",
+            "address": "Bloc Enterprises, LLC\n11 Grumman Hill Road, Suite 1A\nWilton, CT 06897"
+          }
+        }
+      ]
+    }
+  ]
+}
+{% endschema %}

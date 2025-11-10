@@ -9,12 +9,23 @@
  */
 {
   "sections": {
-    "main": {
-      "type": "hello-world",
-      "settings": {}
+    "hero_mHU4Ri": {
+      "type": "hero",
+      "name": "Hero",
+      "settings": {
+        "title_line1": "MAKE A",
+        "title_line2_left": "GREAT",
+        "title_line2_right": "FIRST",
+        "title_line3": "IMPRESSION",
+        "subheading": "<p>Add images and text to give focus to your chosen product, collection, or blog post</p>",
+        "button_label": "Shop Now",
+        "button_link": "",
+        "background_image": "shopify://shop_images/hero-banner.png",
+        "mobile_background_image": "shopify://shop_images/mobile-hero-banner.png"
+      }
     }
   },
   "order": [
-    "main"
+    "hero_mHU4Ri"
   ]
 }

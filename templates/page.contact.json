@@ -1,0 +1,10 @@
+{
+    "sections": {
+      "contact_hero": { "type": "contact-hero", "settings": {} },
+      "contact_content": { "type": "contact-content", "settings": {} }
+    },
+    "order": [
+      "contact_hero",
+      "contact_content"
+    ]
+  }

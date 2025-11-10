@@ -1,49 +1,1030 @@
 {% comment %}
-  This section is used in the product template to render product page with
-  media, content, and add-to-cart form.
-
-  https://shopify.dev/docs/storefronts/themes/architecture/templates/product
+  Product page section with gallery, product info, and add-to-cart form.
+  Supports variant selection, quantity, and product details.
 {% endcomment %}
 
-<div class="product-images">
-  {% for image in product.images %}
-    {% render 'image', class: 'product-image', image: image %}
-  {% endfor %}
-</div>
+{% liquid
+  assign current_variant = product.selected_or_first_available_variant
+  assign featured_image = current_variant.featured_image | default: product.featured_image
 
-<div class="product-info">
-  <h1>{{ product.title }}</h1>
-  <p>{{ product.price | money }}</p>
-  <p>{{ product.description }}</p>
-</div>
+  assign has_discount = false
+  if current_variant.compare_at_price and current_variant.price and current_variant.compare_at_price > current_variant.price
+    assign has_discount = true
+  endif
 
-<div class="product-form">
-  {% form 'product', product %}
-    {% assign current_variant = product.selected_or_first_available_variant %}
+  assign is_available = product.available
+  assign is_sold_out = false
+  unless is_available
+    assign is_sold_out = true
+  endunless
 
-    <select name="id">
-      {% for variant in product.variants %}
-        <option
-          value="{{ variant.id }}"
-          {% if variant == current_variant %}
-            selected="selected"
+  assign show_sale_badge = false
+  if has_discount and is_available
+    assign show_sale_badge = true
+  endif
+
+  assign variant = product.selected_or_first_available_variant
+  assign inventory_qty = 0
+  if variant and variant.inventory_quantity
+    assign inventory_qty = variant.inventory_quantity
+  endif
+
+  assign show_selling_fast_badge = false
+  if show_sale_badge
+    assign show_selling_fast_badge = true
+  elsif inventory_qty > 0 and inventory_qty < 10
+    assign show_selling_fast_badge = true
+  endif
+
+  if is_sold_out
+    assign show_sale_badge = false
+    assign show_selling_fast_badge = false
+  endif
+%}
+
+<div class="home__container">
+  <div class="product__wrapper">
+    {% comment %} Product Gallery {% endcomment %}
+    <div class="product__gallery">
+      {% if product.images.size > 1 %}
+        <div class="product__gallery-thumbnails" data-product-gallery-thumbnails>
+          {% for image in product.images limit: 6 %}
+            <button
+              type="button"
+              class="product__gallery-thumbnail{% if forloop.first %} product__gallery-thumbnail--active{% endif %}"
+              data-product-thumbnail
+              data-image-index="{{ forloop.index0 }}"
+              aria-label="View image {{ forloop.index }}"
+            >
+              {{ image | image_url: width: 160 | image_tag: loading: 'lazy', alt: image.alt | default: product.title }}
+            </button>
+          {% endfor %}
+        </div>
+      {% endif %}
+
+      <div class="product__gallery-main" data-product-gallery-main>
+        {% if product.images.size > 1 %}
+          <button
+            type="button"
+            class="product__gallery-arrow product__gallery-arrow--prev"
+            data-product-gallery-prev
+            aria-label="Previous image"
+          >
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path d="M15 19.5L7.5 12L15 4.5" stroke="#212322" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" />
+            </svg>
+          </button>
+          <button
+            type="button"
+            class="product__gallery-arrow product__gallery-arrow--next"
+            data-product-gallery-next
+            aria-label="Next image"
+          >
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <g clip-path="url(#clip0_9_1876)">
+                <path d="M9 4.5L16.5 12L9 19.5" stroke="#212322" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" />
+              </g>
+              <defs>
+                <clipPath id="clip0_9_1876">
+                  <rect width="24" height="24" fill="white" />
+                </clipPath>
+              </defs>
+            </svg>
+          </button>
+        {% endif %}
+
+        {% if featured_image %}
+          <img
+            src="{{ featured_image | image_url: width: 1200 }}"
+            alt="{{ featured_image.alt | default: product.title }}"
+            class="product__gallery-main-image"
+            data-product-main-image
+            loading="eager"
+            width="{{ featured_image.width }}"
+            height="{{ featured_image.height }}"
+          >
+        {% else %}
+          {{ 'product-1' | placeholder_svg_tag: 'placeholder-svg' }}
+        {% endif %}
+
+        {% if show_selling_fast_badge %}
+          <span class="product__badge">SELLING FAST</span>
+        {% endif %}
+
+        {% if product.images.size > 1 %}
+          <div class="product__gallery-dots" data-product-gallery-dots>
+            {% for image in product.images limit: 6 %}
+              <button
+                type="button"
+                class="product__gallery-dot{% if forloop.first %} product__gallery-dot--active{% endif %}"
+                data-product-gallery-dot
+                data-image-index="{{ forloop.index0 }}"
+                aria-label="Go to image {{ forloop.index }}"
+              ></button>
+            {% endfor %}
+          </div>
+        {% endif %}
+      </div>
+    </div>
+
+    {% comment %} Product Info {% endcomment %}
+    <div class="product__info">
+      <div class="product__info-header">
+        <h1 class="product__title">{{ product.title }}</h1>
+
+        <div class="product__price" data-product-price>
+          {% if has_discount %}
+            <span class="product__price--sale">{{ current_variant.price | money }}</span>
+            <span class="product__price--compare">{{ current_variant.compare_at_price | money }}</span>
+          {% else %}
+            {{ current_variant.price | money }}
           {% endif %}
-        >
-          {{ variant.title }} - {{ variant.price | money }}
-        </option>
-      {% endfor %}
-    </select>
+        </div>
+      </div>
 
-    <input type="text" name="quantity" min="1" value="1">
+      {% form 'product', product, id: 'product-form' %}
+        <div class="product__form">
+          <select name="id" class="product__variant-selector" data-product-variant-selector>
+            {% for variant in product.variants %}
+              <option
+                value="{{ variant.id }}"
+                {% if variant == current_variant %}
+                  selected="selected"
+                {% endif %}
+                {% unless variant.available %}
+                  disabled
+                {% endunless %}
+                data-variant-price="{{ variant.price }}"
+                data-variant-compare-price="{{ variant.compare_at_price }}"
+                data-variant-available="{{ variant.available }}"
+                data-variant-image="{% if variant.featured_image %}{{ variant.featured_image | image_url: width: 1200 }}{% endif %}"
+              >
+                {{ variant.title }}
+              </option>
+            {% endfor %}
+          </select>
 
-    <input type="submit" value="Add to cart">
-    {{ form | payment_button }}
-  {% endform %}
+          {% comment %} Size Selection {% endcomment %}
+          {% if product.options_with_values.size > 0 %}
+            {% for option in product.options_with_values %}
+              {% if option.name == 'Size' or option.name == 'size' %}
+                <div class="product__size">
+                  <div class="product__size-label">
+                    SIZE: <span data-product-selected-size>{{ option.selected_value }}</span>
+                  </div>
+                  <div class="product__size-options" data-product-size-options>
+                    {% for value in option.values %}
+                      {% comment %} Найти вариант с этим размером {% endcomment %}
+                      {% assign matching_variant = null %}
+                      {% for variant in product.variants %}
+                        {% if variant.option1 == value or variant.option2 == value or variant.option3 == value %}
+                          {% assign matching_variant = variant %}
+                          {% break %}
+                        {% endif %}
+                      {% endfor %}
+
+                      <button
+                        type="button"
+                        class="product__size-option{% if value == option.selected_value %} product__size-option--selected{% endif %}"
+                        data-size-value="{{ value }}"
+                        data-variant-id="{{ matching_variant.id }}"
+                        {% unless matching_variant.available %}
+                          disabled
+                        {% endunless %}
+                      >
+                        {{ value }}
+                      </button>
+                    {% endfor %}
+                  </div>
+                </div>
+              {% endif %}
+            {% endfor %}
+          {% endif %}
+
+          <div class="product__quantity-wrapper">
+            {% comment %} Quantity Selector {% endcomment %}
+            <div class="product__quantity">
+              <div class="product__quantity-selector">
+                <button
+                  type="button"
+                  class="product__quantity-btn"
+                  data-product-quantity-decrease
+                  aria-label="Decrease quantity"
+                >
+                  <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M4.3335 8H11.6668" stroke="#A7A3A3" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" />
+                  </svg>
+                </button>
+                <input
+                  type="number"
+                  id="product-quantity-{{ section.id }}"
+                  name="quantity"
+                  class="product__quantity-input"
+                  value="1"
+                  min="1"
+                  data-product-quantity-input
+                >
+                <button
+                  type="button"
+                  class="product__quantity-btn"
+                  data-product-quantity-increase
+                  aria-label="Increase quantity"
+                >
+                  <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M2.5 8H13.5" stroke="#212322" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" />
+                    <path d="M8 2.5V13.5" stroke="#212322" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" />
+                  </svg>
+                </button>
+              </div>
+            </div>
+
+            {% comment %} Add to Cart Button {% endcomment %}
+            <button
+              type="submit"
+              class="product__add-to-cart"
+              data-product-add-to-cart
+              {% unless current_variant.available %}
+                disabled
+              {% endunless %}
+            >
+              {% if current_variant.available %}
+                Add to Cart
+              {% else %}
+                Sold Out
+              {% endif %}
+            </button>
+          </div>
+        </div>
+      {% endform %}
+
+      {% comment %} Product Details {% endcomment %}
+      <div class="product__details">
+        {% if product.description != blank %}
+          <details class="product__details-item">
+            <summary class="product__details-summary">Product details</summary>
+            <div class="product__details-content">
+              {{ product.description }}
+            </div>
+          </details>
+        {% endif %}
+
+        {% comment %} Product Features - можно добавить метаполя или использовать description {% endcomment %}
+        {% if product.metafields.custom.product_features != blank %}
+          <details class="product__details-item">
+            <summary class="product__details-summary">Product features</summary>
+            <div class="product__details-content">
+              {{ product.metafields.custom.product_features }}
+            </div>
+          </details>
+        {% endif %}
+      </div>
+    </div>
+  </div>
 </div>
+
+<script>
+  /**
+   * Product Page Interactive Script
+   * Handles variant selection, quantity controls, gallery, and cart operations
+   */
+  
+  // Initialize product data from Liquid (add this before the script in your .liquid file)
+  {% if product.images.size > 0 %}
+  window.productPageData = {
+    images: [
+      {% for image in product.images %}
+        {
+          src: {{ image | image_url: width: 1200 | json }},
+          alt: {{ image.alt | default: product.title | json }}
+        }{% unless forloop.last %},{% endunless %}
+      {% endfor %}
+    ]
+  };
+  {% endif %}
+  
+  (function () {
+    'use strict';
+  
+    // Configuration
+    const CONFIG = {
+      TRANSITION_DURATION: 150,
+      SUCCESS_MESSAGE_DURATION: 2000,
+      CART_API_ENDPOINT: '/cart/add.js',
+    };
+  
+    // DOM Elements Cache
+    const elements = {
+      productForm: null,
+      variantSelector: null,
+      sizeOptions: null,
+      priceElement: null,
+      addToCartBtn: null,
+      selectedSizeElement: null,
+      quantityInput: null,
+      quantityDecrease: null,
+      quantityIncrease: null,
+      galleryMain: null,
+      galleryThumbnails: null,
+      mainImage: null,
+      galleryPrev: null,
+      galleryNext: null,
+      galleryDots: null,
+    };
+  
+    // Application State
+    let variants = [];
+    let productImages = [];
+    let currentImageIndex = 0;
+  
+    /**
+     * Initialize the product page
+     */
+    function init() {
+      try {
+        cacheElements();
+        
+        if (!validateRequiredElements()) {
+          return;
+        }
+  
+        initializeVariants();
+        initializeProductImages();
+        attachEventListeners();
+        updateInitialState();
+      } catch (error) {
+        // Silent error handling
+      }
+    }
+  
+    /**
+     * Cache all DOM elements
+     */
+    function cacheElements() {
+      elements.productForm = document.querySelector('#product-form');
+      elements.variantSelector = document.querySelector('[data-product-variant-selector]');
+      elements.sizeOptions = document.querySelectorAll('[data-variant-id]');
+      elements.priceElement = document.querySelector('[data-product-price]');
+      elements.addToCartBtn = document.querySelector('[data-product-add-to-cart]');
+      elements.selectedSizeElement = document.querySelector('[data-product-selected-size]');
+      elements.quantityInput = document.querySelector('[data-product-quantity-input]');
+      elements.quantityDecrease = document.querySelector('[data-product-quantity-decrease]');
+      elements.quantityIncrease = document.querySelector('[data-product-quantity-increase]');
+      elements.galleryMain = document.querySelector('[data-product-gallery-main]');
+      elements.galleryThumbnails = document.querySelectorAll('[data-product-thumbnail]');
+      elements.galleryPrev = document.querySelector('[data-product-gallery-prev]');
+      elements.galleryNext = document.querySelector('[data-product-gallery-next]');
+      elements.galleryDots = document.querySelectorAll('[data-product-gallery-dot]');
+      
+      // Try multiple ways to find main image
+      elements.mainImage = document.querySelector('[data-product-main-image]') ||
+                          (elements.galleryMain ? elements.galleryMain.querySelector('img.product__gallery-main-image') : null) ||
+                          (elements.galleryMain ? elements.galleryMain.querySelector('img') : null);
+    }
+  
+    /**
+     * Validate that required elements exist
+     */
+    function validateRequiredElements() {
+      return elements.variantSelector && elements.productForm;
+    }
+  
+    /**
+     * Initialize variants data from select options
+     */
+    function initializeVariants() {
+      if (!elements.variantSelector) return;
+  
+      variants = Array.from(elements.variantSelector.options).map((option) => ({
+        id: option.value,
+        price: parseFloat(option.dataset.variantPrice) || 0,
+        comparePrice: parseFloat(option.dataset.variantComparePrice) || null,
+        available: option.dataset.variantAvailable === 'true',
+        image: option.dataset.variantImage || null,
+      }));
+    }
+  
+    /**
+     * Initialize product images array (populated by Liquid on server-side)
+     */
+    function initializeProductImages() {
+      if (window.productPageData && window.productPageData.images) {
+        productImages = window.productPageData.images;
+      } else {
+        // Fallback: try to get images from DOM thumbnails
+        if (elements.galleryThumbnails && elements.galleryThumbnails.length > 0) {
+          productImages = Array.from(elements.galleryThumbnails).map((thumb) => {
+            const img = thumb.querySelector('img');
+            if (!img) return null;
+            
+            // Get full-size image URL
+            let src = img.src;
+            // Remove size parameters from Shopify CDN URLs
+            src = src.replace(/width=\d+/, 'width=1200');
+            src = src.replace(/_\d+x\d+/, '');
+            src = src.replace(/\?.*$/, '');
+            
+            return {
+              src: src,
+              alt: img.alt || ''
+            };
+          }).filter(Boolean);
+        }
+      }
+    }
+  
+    /**
+     * Attach all event listeners
+     */
+    function attachEventListeners() {
+      // Variant selector
+      if (elements.variantSelector) {
+        elements.variantSelector.addEventListener('change', handleVariantChange);
+      }
+  
+      // Size options
+      if (elements.sizeOptions.length > 0) {
+        elements.sizeOptions.forEach((option) => {
+          option.addEventListener('click', handleSizeOptionClick);
+        });
+      }
+  
+      // Quantity controls
+      if (elements.quantityDecrease) {
+        elements.quantityDecrease.addEventListener('click', handleQuantityDecrease);
+      }
+  
+      if (elements.quantityIncrease) {
+        elements.quantityIncrease.addEventListener('click', handleQuantityIncrease);
+      }
+  
+      // Gallery thumbnails
+      if (elements.galleryThumbnails && elements.galleryThumbnails.length > 0) {
+        elements.galleryThumbnails.forEach((thumbnail) => {
+          thumbnail.addEventListener('click', handleThumbnailClick);
+        });
+      }
+
+      // Gallery arrows
+      if (elements.galleryPrev) {
+        elements.galleryPrev.addEventListener('click', handleGalleryPrev);
+      }
+
+      if (elements.galleryNext) {
+        elements.galleryNext.addEventListener('click', handleGalleryNext);
+      }
+
+      // Gallery dots
+      if (elements.galleryDots && elements.galleryDots.length > 0) {
+        elements.galleryDots.forEach((dot) => {
+          dot.addEventListener('click', handleGalleryDotClick);
+        });
+      }
+
+      // Keyboard navigation
+      if (elements.galleryMain) {
+        elements.galleryMain.addEventListener('keydown', handleGalleryKeydown);
+        elements.galleryMain.setAttribute('tabindex', '0');
+      }
+  
+      // Form submission
+      if (elements.productForm) {
+        elements.productForm.addEventListener('submit', handleFormSubmit);
+      }
+    }
+  
+    /**
+     * Update initial state on page load
+     */
+    function updateInitialState() {
+      if (elements.variantSelector && variants.length > 0) {
+        const currentVariantIndex = elements.variantSelector.selectedIndex;
+        if (currentVariantIndex >= 0 && variants[currentVariantIndex]) {
+          updatePrice(variants[currentVariantIndex]);
+        }
+      }
+
+      // Initialize current image index
+      if (productImages.length > 0) {
+        currentImageIndex = 0;
+      }
+    }
+  
+    // ============================================================================
+    // Event Handlers
+    // ============================================================================
+  
+    /**
+     * Handle variant selector change
+     */
+    function handleVariantChange(event) {
+      const selectedIndex = event.target.selectedIndex;
+      updateVariant(selectedIndex);
+    }
+  
+    /**
+     * Handle size option click
+     */
+    function handleSizeOptionClick(event) {
+      const option = event.currentTarget;
+      
+      if (option.disabled) return;
+  
+      // Update UI
+      elements.sizeOptions.forEach((opt) => {
+        opt.classList.remove('product__size-option--selected');
+      });
+      option.classList.add('product__size-option--selected');
+  
+      // Update selected size text
+      if (elements.selectedSizeElement) {
+        elements.selectedSizeElement.textContent = option.dataset.sizeValue || '';
+      }
+  
+      // Find and select matching variant
+      const variantId = option.dataset.variantId;
+      if (variantId && elements.variantSelector) {
+        const optionIndex = Array.from(elements.variantSelector.options).findIndex(
+          (opt) => opt.value === variantId
+        );
+        
+        if (optionIndex !== -1) {
+          elements.variantSelector.selectedIndex = optionIndex;
+          updateVariant(optionIndex);
+        }
+      }
+    }
+  
+    /**
+     * Handle quantity decrease
+     */
+    function handleQuantityDecrease() {
+      if (!elements.quantityInput) return;
+  
+      const currentValue = parseInt(elements.quantityInput.value) || 1;
+      if (currentValue > 1) {
+        elements.quantityInput.value = currentValue - 1;
+      }
+    }
+  
+    /**
+     * Handle quantity increase
+     */
+    function handleQuantityIncrease() {
+      if (!elements.quantityInput) return;
+  
+      const currentValue = parseInt(elements.quantityInput.value) || 1;
+      elements.quantityInput.value = currentValue + 1;
+    }
+  
+    /**
+     * Handle gallery thumbnail click
+     */
+    function handleThumbnailClick(event) {
+      event.preventDefault();
+      event.stopPropagation();
+  
+      const thumbnail = event.currentTarget;
+      const imageIndex = parseInt(thumbnail.dataset.imageIndex);
+  
+      if (isNaN(imageIndex) || imageIndex < 0) {
+        return;
+      }
+  
+      goToImage(imageIndex, thumbnail);
+    }
+
+    /**
+     * Handle gallery previous arrow click
+     */
+    function handleGalleryPrev(event) {
+      event.preventDefault();
+      event.stopPropagation();
+      
+      const prevIndex = currentImageIndex > 0 ? currentImageIndex - 1 : productImages.length - 1;
+      goToImage(prevIndex);
+    }
+
+    /**
+     * Handle gallery next arrow click
+     */
+    function handleGalleryNext(event) {
+      event.preventDefault();
+      event.stopPropagation();
+      
+      const nextIndex = currentImageIndex < productImages.length - 1 ? currentImageIndex + 1 : 0;
+      goToImage(nextIndex);
+    }
+
+    /**
+     * Handle gallery dot click
+     */
+    function handleGalleryDotClick(event) {
+      event.preventDefault();
+      event.stopPropagation();
+      
+      const dot = event.currentTarget;
+      const imageIndex = parseInt(dot.dataset.imageIndex);
+      
+      if (!isNaN(imageIndex) && imageIndex >= 0) {
+        goToImage(imageIndex, null, dot);
+      }
+    }
+
+    /**
+     * Handle keyboard navigation
+     */
+    function handleGalleryKeydown(event) {
+      if (event.key === 'ArrowLeft') {
+        event.preventDefault();
+        handleGalleryPrev(event);
+      } else if (event.key === 'ArrowRight') {
+        event.preventDefault();
+        handleGalleryNext(event);
+      }
+    }
+
+    /**
+     * Navigate to specific image
+     */
+    function goToImage(imageIndex, thumbnail = null, dot = null) {
+      if (!elements.mainImage || imageIndex < 0 || imageIndex >= productImages.length) {
+        return;
+      }
+
+      currentImageIndex = imageIndex;
+
+      // Get image data
+      let imageData = null;
+      if (productImages.length > 0 && imageIndex < productImages.length) {
+        imageData = productImages[imageIndex];
+      } else {
+        // Fallback: get image from thumbnail if available
+        if (thumbnail) {
+          const thumbnailImg = thumbnail.querySelector('img');
+          if (thumbnailImg) {
+            let src = thumbnailImg.src;
+            src = src.replace(/width=\d+/, 'width=1200');
+            src = src.replace(/_\d+x\d+/, '');
+            src = src.replace(/\?.*$/, '');
+            
+            imageData = {
+              src: src,
+              alt: thumbnailImg.alt || ''
+            };
+          }
+        }
+      }
+
+      if (imageData && imageData.src) {
+        updateMainImage(imageData, thumbnail, dot);
+      }
+    }
+  
+    /**
+     * Handle form submission (Add to Cart)
+     */
+    function handleFormSubmit(event) {
+      event.preventDefault();
+  
+      const formData = new FormData(event.target);
+      const variantId = formData.get('id');
+      const quantity = parseInt(formData.get('quantity')) || 1;
+  
+      if (!variantId) {
+        showAlert('Please select a variant');
+        return;
+      }
+  
+      addToCart(variantId, quantity);
+    }
+  
+    // ============================================================================
+    // Update Functions
+    // ============================================================================
+  
+    /**
+     * Update variant (price, availability, image)
+     */
+    function updateVariant(variantIndex) {
+      if (!elements.variantSelector) return;
+  
+      const option = elements.variantSelector.options[variantIndex];
+      if (!option) return;
+  
+      const variant = variants[variantIndex];
+      if (!variant) return;
+  
+      // Update select value
+      elements.variantSelector.value = option.value;
+  
+      // Update price display
+      updatePrice(variant);
+  
+      // Update add to cart button
+      updateAddToCartButton(variant);
+  
+      // Update main image if variant has specific image
+      if (variant.image && elements.mainImage) {
+        updateMainImage({ src: variant.image, alt: '' });
+      }
+  
+      // Update size selection UI
+      updateSizeSelection(option.value);
+    }
+  
+    /**
+     * Update price display
+     */
+    function updatePrice(variant) {
+      if (!elements.priceElement || !variant) return;
+  
+      const hasDiscount = variant.comparePrice && variant.comparePrice > variant.price;
+  
+      if (hasDiscount) {
+        elements.priceElement.innerHTML = `
+          <span class="product__price--sale">${formatMoney(variant.price)}</span>
+          <span class="product__price--compare">${formatMoney(variant.comparePrice)}</span>
+        `;
+      } else {
+        elements.priceElement.textContent = formatMoney(variant.price);
+      }
+    }
+  
+    /**
+     * Update add to cart button state
+     */
+    function updateAddToCartButton(variant) {
+      if (!elements.addToCartBtn) return;
+  
+      elements.addToCartBtn.disabled = !variant.available;
+      elements.addToCartBtn.textContent = variant.available ? 'Add to Cart' : 'Sold Out';
+    }
+  
+    /**
+     * Update size selection UI to match variant
+     */
+    function updateSizeSelection(variantId) {
+      if (elements.sizeOptions.length === 0) return;
+  
+      const matchingSizeOption = Array.from(elements.sizeOptions).find(
+        (opt) => opt.dataset.variantId === variantId
+      );
+  
+      if (matchingSizeOption) {
+        elements.sizeOptions.forEach((opt) => {
+          opt.classList.remove('product__size-option--selected');
+        });
+        matchingSizeOption.classList.add('product__size-option--selected');
+  
+        if (elements.selectedSizeElement) {
+          elements.selectedSizeElement.textContent = matchingSizeOption.dataset.sizeValue || '';
+        }
+      }
+    }
+  
+    /**
+     * Update main gallery image with transition
+     */
+    function updateMainImage(imageData, activeThumbnail = null, activeDot = null) {
+      if (!elements.mainImage || !imageData || !imageData.src) {
+        return;
+      }
+  
+      // Fade out
+      elements.mainImage.style.opacity = '0';
+      elements.mainImage.style.transition = `opacity ${CONFIG.TRANSITION_DURATION}ms`;
+  
+      setTimeout(() => {
+        // Update image
+        elements.mainImage.src = imageData.src;
+        elements.mainImage.srcset = imageData.src;
+        
+        if (imageData.alt) {
+          elements.mainImage.alt = imageData.alt;
+        }
+  
+        // Fade in
+        elements.mainImage.style.opacity = '1';
+      }, CONFIG.TRANSITION_DURATION);
+  
+      // Update active thumbnail
+      if (elements.galleryThumbnails && elements.galleryThumbnails.length > 0) {
+        elements.galleryThumbnails.forEach((thumb) => {
+          thumb.classList.remove('product__gallery-thumbnail--active');
+        });
+        if (activeThumbnail) {
+          activeThumbnail.classList.add('product__gallery-thumbnail--active');
+        } else if (elements.galleryThumbnails[currentImageIndex]) {
+          elements.galleryThumbnails[currentImageIndex].classList.add('product__gallery-thumbnail--active');
+        }
+      }
+
+      // Update active dot
+      if (elements.galleryDots && elements.galleryDots.length > 0) {
+        elements.galleryDots.forEach((dot) => {
+          dot.classList.remove('product__gallery-dot--active');
+        });
+        if (activeDot) {
+          activeDot.classList.add('product__gallery-dot--active');
+        } else if (elements.galleryDots[currentImageIndex]) {
+          elements.galleryDots[currentImageIndex].classList.add('product__gallery-dot--active');
+        }
+      }
+    }
+  
+    // ============================================================================
+    // Cart Operations
+    // ============================================================================
+  
+    /**
+     * Add product to cart via AJAX
+     */
+    async function addToCart(variantId, quantity) {
+      if (!elements.addToCartBtn) return;
+  
+      const originalText = elements.addToCartBtn.textContent;
+      
+      try {
+        // Update button state
+        elements.addToCartBtn.disabled = true;
+        elements.addToCartBtn.textContent = 'Adding...';
+  
+        // Make API request
+        const response = await fetch(CONFIG.CART_API_ENDPOINT, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            items: [
+              {
+                id: parseInt(variantId),
+                quantity: quantity,
+              },
+            ],
+          }),
+        });
+  
+        if (!response.ok) {
+          const error = await response.json();
+          throw new Error(error.description || error.message || 'Failed to add to cart');
+        }
+  
+        const data = await response.json();
+  
+        // Success handling
+        handleCartSuccess(data, quantity);
+        
+      } catch (error) {
+        handleCartError(error);
+      } finally {
+        // Reset button after delay
+        setTimeout(() => {
+          if (elements.addToCartBtn) {
+            elements.addToCartBtn.disabled = false;
+            elements.addToCartBtn.textContent = originalText;
+          }
+        }, CONFIG.SUCCESS_MESSAGE_DURATION);
+      }
+    }
+  
+    /**
+     * Handle successful cart addition
+     */
+    function handleCartSuccess(data, quantity = 1) {
+      if (!elements.addToCartBtn) return;
+  
+      // Show success message
+      elements.addToCartBtn.textContent = 'Added to Cart!';
+  
+      // Update cart count
+      updateCartCount(data, quantity);
+  
+      // Dispatch custom event
+      document.dispatchEvent(new CustomEvent('cart:updated', { detail: data }));
+  
+      // Open cart drawer if function exists
+      setTimeout(() => {
+        if (typeof window.openCartDrawer === 'function') {
+          window.openCartDrawer();
+        }
+      }, 500);
+    }
+
+    /**
+     * Update cart count in header with animation
+     */
+    async function updateCartCount(cartData = null, addedQuantity = 1) {
+      const cartIcon = document.querySelector('a[href*="/cart"]');
+      if (!cartIcon) return;
+
+      let newCount = 0;
+      
+      // Always fetch current cart state to get accurate count
+      try {
+        const response = await fetch('/cart.js');
+        if (response.ok) {
+          const cart = await response.json();
+          newCount = cart.item_count || 0;
+        } else {
+          return;
+        }
+      } catch (error) {
+        return;
+      }
+
+      // Get or create count element
+      let countElement = cartIcon.querySelector('sup');
+      
+      if (newCount > 0) {
+        if (!countElement) {
+          countElement = document.createElement('sup');
+          cartIcon.appendChild(countElement);
+        }
+        
+        const oldCount = parseInt(countElement.textContent) || 0;
+        const isIncreasing = newCount > oldCount;
+        
+        // Add animation class
+        countElement.classList.add('cart-count-updating');
+        if (isIncreasing) {
+          countElement.classList.add('cart-count-increasing');
+        }
+        
+        // Update count
+        countElement.textContent = newCount;
+        
+        // Remove animation classes after animation
+        setTimeout(() => {
+          countElement.classList.remove('cart-count-updating', 'cart-count-increasing');
+        }, 600);
+      } else {
+        // Remove count element if cart is empty
+        if (countElement) {
+          countElement.remove();
+        }
+      }
+    }
+
+    // Expose function globally
+    window.updateCartCount = updateCartCount;
+  
+    /**
+     * Handle cart addition error
+     */
+    function handleCartError(error) {
+      const errorMessage = error.message || 'There was an error adding the product to your cart. Please try again.';
+      showAlert(errorMessage);
+    }
+  
+    // ============================================================================
+    // Utility Functions
+    // ============================================================================
+  
+    /**
+     * Format money using Intl.NumberFormat
+     */
+    function formatMoney(cents) {
+      try {
+        const currency = window.Shopify?.currency?.active || 'USD';
+        const locale = document.documentElement.lang || 'en';
+  
+        return new Intl.NumberFormat(locale, {
+          style: 'currency',
+          currency: currency,
+          minimumFractionDigits: 0,
+          maximumFractionDigits: 2,
+        }).format(cents / 100);
+      } catch (error) {
+        return `$${(cents / 100).toFixed(2)}`;
+      }
+    }
+  
+    /**
+     * Show alert message
+     */
+    function showAlert(message) {
+      alert(message);
+    }
+  
+    // ============================================================================
+    // Initialization
+    // ============================================================================
+  
+    // Initialize when DOM is ready
+    if (document.readyState === 'loading') {
+      document.addEventListener('DOMContentLoaded', init);
+    } else {
+      init();
+    }
+  })();
+</script>
 
 {% schema %}
 {
-  "name": "t:general.product",
+  "name": "Product",
+  "tag": "section",
+  "class": "product-section template__product-section",
   "settings": [],
   "disabled_on": {
     "groups": ["header", "footer"]

@@ -1,0 +1,21 @@
+<section class="page-content page-about">
+  {% if section.settings.show_title %}
+    <h1 class="page-content__title">{{ page.title | escape }}</h1>
+  {% endif %}
+
+  <div class="page-content__body">
+    {{ page.content }}
+  </div>
+</section>
+
+{% schema %}
+{
+  "name": "Page content",
+  "settings": [
+    { "type": "checkbox", "id": "show_title", "label": "Show page title", "default": true }
+  ],
+  "presets": [{ "name": "Page content" }]
+}
+{% endschema %}
+
+

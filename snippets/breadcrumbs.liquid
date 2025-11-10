@@ -1,0 +1,80 @@
+<nav class="breadcrumbs" aria-label="Breadcrumb">
+  <ol class="breadcrumbs__list" itemscope itemtype="https://schema.org/BreadcrumbList">
+    {% assign pos = 1 %}
+
+    {%- capture sep -%}
+        <span class="breadcrumbs__sep" aria-hidden="true">
+          <svg width="12" height="12" viewBox="0 0 12 12" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M4.5 3L7.5 6L4.5 9" stroke="#DFDFDF" stroke-linecap="round" stroke-linejoin="round" />
+          </svg>
+        </span>
+      {%- endcapture -%}
+
+    <li class="breadcrumbs__item" itemprop="itemListElement" itemscope itemtype="https://schema.org/ListItem">
+      <a class="breadcrumbs__link" href="{{ routes.root_url }}" itemprop="item">
+        <span itemprop="name">{{ 'general.breadcrumbs.home' | t | default: 'Home' }}</span>
+      </a>
+      <meta itemprop="position" content="{{ pos }}">
+    </li>
+    {{ sep }}
+    {% assign pos = pos | plus: 1 %}
+
+    {% case template.name %}
+      {% when 'collection' %}
+        <li class="breadcrumbs__item" itemprop="itemListElement" itemscope itemtype="https://schema.org/ListItem">
+          <span class="breadcrumbs__current" itemprop="name">{{ collection.title }}</span>
+          <meta itemprop="position" content="{{ pos }}">
+        </li>
+
+      {% when 'product' %}
+        {% if product.collections.first %}
+          <li class="breadcrumbs__item" itemprop="itemListElement" itemscope itemtype="https://schema.org/ListItem">
+            <a class="breadcrumbs__link" href="{{ product.collections.first.url }}" itemprop="item">
+              <span itemprop="name">{{ product.collections.first.title }}</span>
+            </a>
+            <meta itemprop="position" content="{{ pos }}">
+          </li>
+          {{ sep }}
+          {% assign pos = pos | plus: 1 %}
+        {% endif %}
+        <li class="breadcrumbs__item" itemprop="itemListElement" itemscope itemtype="https://schema.org/ListItem">
+          <span class="breadcrumbs__current" itemprop="name">{{ product.title }}</span>
+          <meta itemprop="position" content="{{ pos }}">
+        </li>
+
+      {% when 'blog' %}
+        <li class="breadcrumbs__item" itemprop="itemListElement" itemscope itemtype="https://schema.org/ListItem">
+          <span class="breadcrumbs__current" itemprop="name">{{ blog.title }}</span>
+          <meta itemprop="position" content="{{ pos }}">
+        </li>
+
+      {% when 'article' %}
+        <li class="breadcrumbs__item" itemprop="itemListElement" itemscope itemtype="https://schema.org/ListItem">
+          <a class="breadcrumbs__link" href="{{ blog.url }}" itemprop="item">
+            <span itemprop="name">{{ blog.title }}</span>
+          </a>
+          <meta itemprop="position" content="{{ pos }}">
+        </li>
+        {{ sep }}
+        {% assign pos = pos | plus: 1 %}
+        <li class="breadcrumbs__item" itemprop="itemListElement" itemscope itemtype="https://schema.org/ListItem">
+          <span class="breadcrumbs__current" itemprop="name">{{ article.title }}</span>
+          <meta itemprop="position" content="{{ pos }}">
+        </li>
+
+      {% when 'page' %}
+        <li class="breadcrumbs__item" itemprop="itemListElement" itemscope itemtype="https://schema.org/ListItem">
+          <span class="breadcrumbs__current" itemprop="name">{{ page.title }}</span>
+          <meta itemprop="position" content="{{ pos }}">
+        </li>
+
+      {% when 'search' %}
+        <li class="breadcrumbs__item" itemprop="itemListElement" itemscope itemtype="https://schema.org/ListItem">
+          <span class="breadcrumbs__current" itemprop="name">
+            {{- 'general.search.search' | t | default: 'Search' -}}
+          </span>
+          <meta itemprop="position" content="{{ pos }}">
+        </li>
+    {% endcase %}
+  </ol>
+</nav>

@@ -1,0 +1,599 @@
+{% comment %}
+  Recommended Products Slider Section
+  Displays a horizontal slider of recommended products
+{% endcomment %}
+
+{% liquid
+  assign collection_handle = section.settings.collection
+  assign products_limit = section.settings.products_limit | default: 8
+  assign title = section.settings.title | default: 'Recommended'
+  assign show_view_all = section.settings.show_view_all
+  assign view_all_text = section.settings.view_all_text | default: 'View all'
+  assign view_all_link = section.settings.view_all_link | default: collections[collection_handle].url
+%}
+
+{% if collection_handle != blank %}
+  {% assign selected_collection = collections[collection_handle] %}
+{% else %}
+  {% assign selected_collection = collections.all %}
+{% endif %}
+
+{% if selected_collection != blank and selected_collection.products.size > 0 %}
+  <section class="recommended" data-recommended-products>
+    <div class="home__container">
+      <div class="recommended__header">
+        <div class="recommended__header-top">
+          <h2 class="recommended__title">{{ title }}</h2>
+          {% if show_view_all and view_all_link != blank %}
+            <a href="{{ view_all_link }}" class="recommended__view-all">
+              {{ view_all_text }}
+              <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M6 12L10 8L6 4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" />
+              </svg>
+            </a>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+
+    <div class="recommended__slider-wrapper">
+      <div class="recommended__slider" data-recommended-slider>
+        <div class="recommended__track" data-recommended-track>
+          {% for product in selected_collection.products limit: products_limit %}
+            {% liquid
+              assign is_available = product.available
+              assign is_sold_out = false
+              unless is_available
+                assign is_sold_out = true
+              endunless
+
+              assign has_discount = false
+              if product.compare_at_price and product.price and product.compare_at_price > product.price
+                assign has_discount = true
+              endif
+
+              assign show_sale_badge = false
+              if has_discount and is_available
+                assign show_sale_badge = true
+              endif
+
+              assign variant = product.selected_or_first_available_variant
+              assign inventory_qty = 0
+              if variant and variant.inventory_quantity
+                assign inventory_qty = variant.inventory_quantity
+              endif
+
+              assign show_selling_fast_badge = false
+              if show_sale_badge
+                assign show_selling_fast_badge = true
+              elsif inventory_qty > 0 and inventory_qty < 10
+                assign show_selling_fast_badge = true
+              endif
+
+              if is_sold_out
+                assign show_sale_badge = false
+                assign show_selling_fast_badge = false
+              endif
+            %}
+
+            <article class="recommended__item{% if is_sold_out %} recommended__item--sold-out{% endif %}">
+              <div class="recommended__media-wrapper">
+                <a
+                  class="recommended__media{% if is_sold_out %} recommended__media--disabled{% endif %}"
+                  {% if is_sold_out %}
+                    aria-disabled="true"
+                    tabindex="-1"
+                  {% else %}
+                    href="{{ product.url }}"
+                    aria-label="{{ product.title | escape }}"
+                  {% endif %}
+                >
+                  {% if product.featured_image %}
+                    {{
+                      product.featured_image
+                      | image_url: width: 600
+                      | image_tag: loading: 'lazy', alt: product.featured_image.alt
+                      | default: product.title, class: 'recommended__image'
+                    }}
+                  {% else %}
+                    <div class="recommended__image recommended__image--placeholder">
+                      {{ 'product-1' | placeholder_svg_tag: 'placeholder-svg' }}
+                    </div>
+                  {% endif %}
+
+                  {% comment %} Product badges {% endcomment %}
+                  <div class="recommended__badges">
+                    <div class="recommended__badges-left">
+                      {% unless is_available %}
+                        <span class="recommended__badge recommended__badge--sold-out">SOLD OUT</span>
+                      {% endunless %}
+
+                      {% if show_selling_fast_badge %}
+                        <span class="recommended__badge recommended__badge--selling-fast">SELLING FAST</span>
+                      {% endif %}
+                    </div>
+
+                    <div class="recommended__badges-right">
+                      {% if show_sale_badge %}
+                        {% assign discount = product.compare_at_price
+                          | minus: product.price
+                          | times: 100.0
+                          | divided_by: product.compare_at_price
+                          | round
+                        %}
+                        <span class="recommended__badge recommended__badge--sale">{{ discount }}% OFF</span>
+                      {% endif %}
+                    </div>
+                  </div>
+
+                  {% comment %} Quick Add button (desktop) {% endcomment %}
+                  {% if product.available %}
+                    <div class="recommended__quick-add">
+                      <form
+                        action="{{ routes.cart_add_url }}"
+                        method="post"
+                        enctype="multipart/form-data"
+                        class="recommended__quick-add-form"
+                      >
+                        <input type="hidden" name="id" value="{{ product.selected_or_first_available_variant.id }}">
+                        <input type="hidden" name="quantity" value="1">
+                        <button
+                          type="submit"
+                          class="recommended__quick-add-btn"
+                          aria-label="Quick add {{ product.title | escape }}"
+                        >
+                          Quick Add
+                          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            <path d="M3.75 12H20.25" stroke="#F1F1F1" stroke-linecap="round" stroke-linejoin="round" />
+                            <path d="M12 3.75V20.25" stroke="#FAFAF8" stroke-linecap="round" stroke-linejoin="round" />
+                          </svg>
+                        </button>
+                      </form>
+                    </div>
+                  {% endif %}
+                </a>
+              </div>
+
+              <div class="recommended__content">
+                <div class="recommended__content-inner">
+                  <h3 class="recommended__title-item">
+                    <a href="{{ product.url }}">{{ product.title | escape }}</a>
+                  </h3>
+                  <div class="recommended__price-wrapper">
+                    <div class="recommended__price">
+                      {% if has_discount %}
+                        <span class="recommended__price--sale">{{ product.price | money }}</span>
+                        <span class="recommended__price--compare">{{ product.compare_at_price | money }}</span>
+                      {% else %}
+                        {{ product.price | money }}
+                      {% endif %}
+                    </div>
+                  </div>
+                </div>
+
+                {% if product.available %}
+                  <div class="recommended__quick-add recommended__quick-add--mobile">
+                    <form
+                      action="{{ routes.cart_add_url }}"
+                      method="post"
+                      enctype="multipart/form-data"
+                      class="recommended__quick-add-form"
+                    >
+                      <input type="hidden" name="id" value="{{ product.selected_or_first_available_variant.id }}">
+                      <input type="hidden" name="quantity" value="1">
+                      <button
+                        type="submit"
+                        class="recommended__quick-add-btn"
+                        aria-label="Quick add {{ product.title | escape }}"
+                      >
+                        <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+                          <path d="M13.1047 4.49994H2.89597C2.77307 4.49992 2.65441 4.54484 2.56232 4.62622C2.47023 4.7076 2.41107 4.81985 2.39597 4.94181L1.50534 12.4418C1.49711 12.5122 1.50392 12.5835 1.52533 12.651C1.54674 12.7186 1.58226 12.7808 1.62954 12.8336C1.67682 12.8864 1.73477 12.9285 1.79956 12.9572C1.86435 12.9858 1.93449 13.0004 2.00534 12.9999H13.9953C14.0662 13.0004 14.1363 12.9858 14.2011 12.9572C14.2659 12.9285 14.3239 12.8864 14.3712 12.8336C14.4184 12.7808 14.4539 12.7186 14.4754 12.651C14.4968 12.5835 14.5036 12.5122 14.4953 12.4418L13.6047 4.94181C13.5896 4.81985 13.5305 4.7076 13.4384 4.62622C13.3463 4.54484 13.2276 4.49992 13.1047 4.49994Z" stroke="#FAFAF8" stroke-linecap="round" stroke-linejoin="round" />
+                          <path d="M5.5 4.49994V3.99994C5.5 3.3369 5.76339 2.70101 6.23223 2.23217C6.70107 1.76333 7.33696 1.49994 8 1.49994C8.66304 1.49994 9.29893 1.76333 9.76777 2.23217C10.2366 2.70101 10.5 3.3369 10.5 3.99994V4.49994" stroke="#FAFAF8" stroke-linecap="round" stroke-linejoin="round" />
+                        </svg>
+                      </button>
+                    </form>
+                  </div>
+                {% endif %}
+              </div>
+            </article>
+          {% endfor %}
+        </div>
+      </div>
+
+      {% comment %} Pagination {% endcomment %}
+      <div class="recommended__pagination" data-recommended-pagination>
+        <div class="recommended__pagination-track">
+          <div class="recommended__pagination-progress" data-recommended-progress></div>
+        </div>
+      </div>
+    </div>
+  </section>
+{% endif %}
+
+<script>
+  (function () {
+    'use strict';
+
+    const slider = document.querySelector('[data-recommended-slider]');
+    const track = document.querySelector('[data-recommended-track]');
+    const progressBar = document.querySelector('[data-recommended-progress]');
+
+    if (!slider || !track || !progressBar) return;
+
+    const items = track.querySelectorAll('.recommended__item');
+    if (items.length === 0) return;
+
+    let currentIndex = 0;
+    let itemsPerView = getItemsPerView();
+    let totalPages = 0;
+
+    // Drag/Swipe state
+    let isDragging = false;
+    let startX = 0;
+    let currentX = 0;
+    let startTranslate = 0;
+    let currentTranslate = 0;
+    let animationID = 0;
+
+    function getItemsPerView() {
+      if (window.innerWidth >= 1024) return 4;
+      if (window.innerWidth >= 768) return 3;
+      if (window.innerWidth >= 480) return 2;
+      return 1;
+    }
+
+    function calculateTotalPages() {
+      itemsPerView = getItemsPerView();
+      totalPages = Math.ceil(items.length / itemsPerView);
+      return totalPages;
+    }
+
+    function getTranslateX() {
+      const itemWidth = items[0].offsetWidth;
+      const gap = parseInt(getComputedStyle(track).gap) || 16;
+      return -(currentIndex * (itemWidth + gap));
+    }
+
+    function updateSlider(useTransition = true) {
+      itemsPerView = getItemsPerView();
+      const maxIndex = Math.max(0, items.length - itemsPerView);
+
+      if (currentIndex > maxIndex) {
+        currentIndex = maxIndex;
+      }
+
+      const translateX = getTranslateX();
+
+      if (useTransition) {
+        track.style.transition = 'transform 0.3s ease';
+      } else {
+        track.style.transition = 'none';
+      }
+
+      track.style.transform = `translateX(${translateX}px)`;
+
+      // Update pagination
+      updatePagination();
+    }
+
+    function updatePagination() {
+      calculateTotalPages();
+      if (totalPages <= 1) {
+        progressBar.style.width = '100%';
+        return;
+      }
+
+      itemsPerView = getItemsPerView();
+      const maxIndex = Math.max(0, items.length - itemsPerView);
+
+      // Calculate current page based on position
+      let currentPage;
+      if (currentIndex >= maxIndex) {
+        // We're at the last position
+        currentPage = totalPages;
+      } else {
+        currentPage = Math.floor(currentIndex / itemsPerView) + 1;
+      }
+
+      const progress = (currentPage / totalPages) * 100;
+      progressBar.style.width = `${Math.min(100, progress)}%`;
+    }
+
+    function setPositionByIndex() {
+      const itemWidth = items[0].offsetWidth;
+      const gap = parseInt(getComputedStyle(track).gap) || 16;
+      const translateX = -(currentIndex * (itemWidth + gap));
+      currentTranslate = translateX;
+      startTranslate = translateX;
+    }
+
+    function animation() {
+      track.style.transform = `translateX(${currentTranslate}px)`;
+      if (isDragging) {
+        requestAnimationFrame(animation);
+      }
+    }
+
+    function dragStart(e) {
+      // Don't start drag if clicking on a link or button
+      if (e.target.closest('a, button')) {
+        return;
+      }
+
+      if (e.type === 'touchstart') {
+        startX = e.touches[0].clientX;
+      } else {
+        startX = e.clientX;
+        e.preventDefault();
+      }
+
+      isDragging = true;
+      startTranslate = currentTranslate;
+      track.style.transition = 'none';
+      animationID = requestAnimationFrame(animation);
+    }
+
+    function drag(e) {
+      if (!isDragging) return;
+
+      if (e.type === 'touchmove') {
+        currentX = e.touches[0].clientX;
+      } else {
+        currentX = e.clientX;
+      }
+
+      const moved = currentX - startX;
+      currentTranslate = startTranslate + moved;
+    }
+
+    function dragEnd() {
+      if (!isDragging) return;
+
+      cancelAnimationFrame(animationID);
+      isDragging = false;
+
+      const itemWidth = items[0].offsetWidth;
+      const gap = parseInt(getComputedStyle(track).gap) || 16;
+      const moved = currentTranslate - startTranslate;
+      const threshold = (itemWidth + gap) * 0.25; // 25% of item width for better sensitivity
+
+      itemsPerView = getItemsPerView();
+      const maxIndex = Math.max(0, items.length - itemsPerView);
+
+      if (Math.abs(moved) > threshold) {
+        if (moved > 0) {
+          // Swipe right - go to previous
+          if (currentIndex > 0) {
+            // Calculate how many items to move back
+            const itemsToMove = Math.min(itemsPerView, currentIndex);
+            currentIndex = Math.max(0, currentIndex - itemsToMove);
+          }
+        } else {
+          // Swipe left - go to next
+          if (currentIndex < maxIndex) {
+            // Calculate how many items to move forward
+            const remainingItems = items.length - currentIndex;
+            const itemsToMove = Math.min(itemsPerView, remainingItems);
+            currentIndex = Math.min(maxIndex, currentIndex + itemsToMove);
+          }
+        }
+      } else {
+        // If movement is small, snap back to current position
+        // But allow small adjustments for better UX
+        const snapThreshold = (itemWidth + gap) * 0.15;
+        if (Math.abs(moved) > snapThreshold) {
+          // Move by one item if threshold is met
+          if (moved > 0 && currentIndex > 0) {
+            currentIndex = Math.max(0, currentIndex - 1);
+          } else if (moved < 0 && currentIndex < maxIndex) {
+            currentIndex = Math.min(maxIndex, currentIndex + 1);
+          }
+        }
+      }
+
+      currentTranslate = getTranslateX();
+      startTranslate = currentTranslate;
+      updateSlider();
+    }
+
+    // Mouse events
+    slider.addEventListener('mousedown', dragStart);
+    slider.addEventListener('mousemove', drag);
+    slider.addEventListener('mouseup', dragEnd);
+    slider.addEventListener('mouseleave', dragEnd);
+
+    // Touch events
+    slider.addEventListener('touchstart', dragStart, { passive: true });
+    slider.addEventListener('touchmove', drag, { passive: true });
+    slider.addEventListener('touchend', dragEnd);
+
+    let resizeTimer;
+    window.addEventListener('resize', () => {
+      clearTimeout(resizeTimer);
+      resizeTimer = setTimeout(() => {
+        currentIndex = 0;
+        setPositionByIndex();
+        updateSlider();
+      }, 250);
+    });
+
+    // Initialize
+    currentTranslate = getTranslateX();
+    startTranslate = currentTranslate;
+    updateSlider();
+  })();
+
+  // Quick Add to Cart with AJAX
+  (function () {
+    'use strict';
+
+    const quickAddForms = document.querySelectorAll('.recommended__quick-add-form');
+
+    quickAddForms.forEach((form) => {
+      form.addEventListener('submit', async function (e) {
+        e.preventDefault();
+
+        const formData = new FormData(form);
+        const variantId = formData.get('id');
+        const quantity = parseInt(formData.get('quantity')) || 1;
+        const button = form.querySelector('button[type="submit"]');
+
+        if (!variantId || !button) return;
+
+        const originalContent = button.innerHTML;
+        const originalDisabled = button.disabled;
+
+        try {
+          button.disabled = true;
+          if (button.querySelector('svg')) {
+            button.style.opacity = '0.6';
+          }
+
+          const response = await fetch('/cart/add.js', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+              items: [
+                {
+                  id: parseInt(variantId),
+                  quantity: quantity,
+                },
+              ],
+            }),
+          });
+
+          if (!response.ok) {
+            const error = await response.json();
+            throw new Error(error.description || error.message || 'Failed to add to cart');
+          }
+
+          const data = await response.json();
+
+          // Update cart count
+          if (typeof window.updateCartCount === 'function') {
+            window.updateCartCount(data, quantity);
+          } else {
+            // Fallback: fetch cart and update
+            try {
+              const cartResponse = await fetch('/cart.js');
+              if (cartResponse.ok) {
+                const cart = await cartResponse.json();
+                updateCartCountFallback(cart.item_count);
+              }
+            } catch (err) {
+              // Silent fail
+            }
+          }
+
+          // Dispatch event
+          document.dispatchEvent(new CustomEvent('cart:updated', { detail: data }));
+
+          // Visual feedback
+          button.style.opacity = '1';
+          const originalText = button.textContent.trim();
+          if (button.querySelector('svg')) {
+            button.innerHTML = originalContent.replace(/Quick Add/g, 'Added!');
+          } else {
+            button.textContent = 'Added!';
+          }
+
+          setTimeout(() => {
+            button.disabled = originalDisabled;
+            button.innerHTML = originalContent;
+          }, 1500);
+
+        } catch (error) {
+          button.disabled = originalDisabled;
+          button.style.opacity = '1';
+          alert(error.message || 'Failed to add product to cart');
+        }
+      });
+    });
+
+    function updateCartCountFallback(newCount) {
+      const cartIcon = document.querySelector('a[href*="/cart"]');
+      if (!cartIcon) return;
+
+      let countElement = cartIcon.querySelector('sup');
+
+      if (newCount > 0) {
+        if (!countElement) {
+          countElement = document.createElement('sup');
+          cartIcon.appendChild(countElement);
+        }
+
+        const oldCount = parseInt(countElement.textContent) || 0;
+        const isIncreasing = newCount > oldCount;
+
+        countElement.classList.add('cart-count-updating');
+        if (isIncreasing) {
+          countElement.classList.add('cart-count-increasing');
+        }
+
+        countElement.textContent = newCount;
+
+        setTimeout(() => {
+          countElement.classList.remove('cart-count-updating', 'cart-count-increasing');
+        }, 600);
+      } else {
+        if (countElement) {
+          countElement.remove();
+        }
+      }
+    }
+  })();
+</script>
+
+{% schema %}
+{
+  "name": "Recommended Products",
+  "tag": "section",
+  "class": "recommended-section",
+  "settings": [
+    {
+      "type": "text",
+      "id": "title",
+      "label": "Title",
+      "default": "Recommended"
+    },
+    {
+      "type": "collection",
+      "id": "collection",
+      "label": "Collection"
+    },
+    {
+      "type": "range",
+      "id": "products_limit",
+      "label": "Products to show",
+      "min": 4,
+      "max": 20,
+      "step": 1,
+      "default": 8
+    },
+    {
+      "type": "checkbox",
+      "id": "show_view_all",
+      "label": "Show 'View all' link",
+      "default": true
+    },
+    {
+      "type": "text",
+      "id": "view_all_text",
+      "label": "View all text",
+      "default": "View all"
+    },
+    {
+      "type": "url",
+      "id": "view_all_link",
+      "label": "View all link"
+    }
+  ],
+  "presets": [
+    {
+      "name": "Recommended Products"
+    }
+  ]
+}
+{% endschema %}

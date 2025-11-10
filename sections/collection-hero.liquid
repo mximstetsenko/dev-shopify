@@ -1,0 +1,49 @@
+{% assign hero_image = section.settings.image | default: collection.image %}
+{% assign hero_image_mobile = section.settings.image_mobile %}
+{% assign hero_title = section.settings.title | default: collection.title %}
+
+{% if hero_image %}
+  <div class="collection__hero-background">
+    {% if hero_image_mobile %}
+      <picture>
+        <source media="(max-width: 768px)" srcset="{{ hero_image_mobile | image_url: width: 1200 }}">
+        {{ hero_image | image_url: width: 2400 | image_tag: loading: 'lazy', alt: hero_title | escape }}
+      </picture>
+    {% else %}
+      {{ hero_image | image_url: width: 2400 | image_tag: loading: 'lazy', alt: hero_title | escape }}
+    {% endif %}
+  </div>
+{% endif %}
+
+<div class="container collection__hero-container">
+  {% if hero_title %}
+    <h1 class="collection__hero-title">{{ hero_title | escape }}</h1>
+  {% endif %}
+</div>
+
+{% schema %}
+{
+  "name": "Collection hero",
+  "tag": "section",
+  "class": "section collection__hero",
+  "settings": [
+    {
+      "type": "image_picker",
+      "id": "image",
+      "label": "Desktop image"
+    },
+    {
+      "type": "image_picker",
+      "id": "image_mobile",
+      "label": "Mobile image"
+    },
+    {
+      "type": "text",
+      "id": "title",
+      "label": "Title",
+      "default": "Collection"
+    }
+  ],
+  "presets": [{ "name": "Collection hero" }]
+}
+{% endschema %}

@@ -1,0 +1,30 @@
+{% if section.settings.image %}
+  <div class="contact__hero-background">
+    {{
+      section.settings.image
+      | image_url: width: 2400
+      | image_tag: loading: 'lazy', alt: section.settings.title
+      | escape
+    }}
+  </div>
+{% endif %}
+
+<div class="container contact__hero-container">
+  {% render 'breadcrumbs' %}
+  {% if section.settings.title != blank %}
+    <h1 class="contact__hero-title">{{ section.settings.title | escape }}</h1>
+  {% endif %}
+</div>
+
+{% schema %}
+{
+  "name": "Contact hero",
+  "tag": "section",
+  "class": "section contact__hero",
+  "settings": [
+    { "type": "image_picker", "id": "image", "label": "Background image" },
+    { "type": "text", "id": "title", "label": "Title", "default": "Contact Us" }
+  ],
+  "presets": [{ "name": "Contact hero" }]
+}
+{% endschema %}

@@ -14,8 +14,19 @@
     "footer": {
       "type": "footer",
       "settings": {
-        "menu": "",
-        "show_payment_icons": true
+        "shop_title": "SHOP",
+        "shop_menu": "primary-menu",
+        "contact_title": "CONTACT",
+        "contact_address": "Palm St, 456",
+        "contact_city": "London, UK",
+        "contact_phone": "+ (345) 789 89 98",
+        "info_title": "MORE INFO",
+        "info_menu": "main-menu",
+        "news_title": "GET 10% OF CASHBACK",
+        "news_placeholder": "Your E-mail",
+        "social_linkedin": "",
+        "social_facebook": "",
+        "social_instagram": ""
       }
     }
   },

@@ -1,21 +1,28 @@
 <!doctype html>
 <html lang="{{ request.locale.iso_code }}">
   <head>
-    {% # Inlined CSS Variables %}
+    {% comment %} Inlined CSS Variables {% endcomment %}
     {% render 'css-variables' %}
 
-    {% # Load and preload the critical CSS %}
-    {{ 'critical.css' | asset_url | stylesheet_tag: preload: true }}
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Montserrat:wght@400;500;600;700&family=Nunito+Sans:wght@400;600;700&family=Poppins:wght@400;500;600;700&display=swap"
+      rel="stylesheet"
+    >
+
+    {{ 'reset.css' | asset_url | stylesheet_tag }}
 
     {{ 'theme.css' | asset_url | stylesheet_tag }}
 
-    {% # Social, title, etc. %}
+    {% comment %} Social, title, etc. {% endcomment %}
     {% render 'meta-tags' %}
 
     {{ content_for_header }}
   </head>
 
-  <body>
+  <body class="template__{{ template.name }}{% if template.name == 'page' %} page__{{ page.handle }}{% endif %}">
     {% sections 'header-group' %}
 
     {{ content_for_layout }}
@@ -23,5 +30,6 @@
     {% sections 'footer-group' %}
 
     <script src="{{ 'theme.js' | asset_url }}" defer></script>
+    <script src="{{ 'header.js' | asset_url }}" defer></script>
   </body>
 </html>

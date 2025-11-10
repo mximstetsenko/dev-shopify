@@ -7,7 +7,7 @@ const esbuild = require('gulp-esbuild');
 
 const paths = {
   styles: {
-    entry: 'src/scss/theme.scss',
+    entry: ['src/scss/*.scss', '!src/scss/_*.scss'],
     watch: 'src/scss/**/*.scss',
     out: 'assets'
   },
