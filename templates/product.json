@@ -18,7 +18,7 @@
       "name": "Recommended Products",
       "settings": {
         "title": "Recommended",
-        "collection": "",
+        "collection": "crew-necks",
         "products_limit": 8,
         "show_view_all": true,
         "view_all_text": "View all",
