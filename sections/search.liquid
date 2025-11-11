@@ -278,6 +278,8 @@
 <script>
   (() => {
     const SECTION_ID = 'SearchSection-{{ section.id }}';
+    const INITIAL_TERMS = {{ search.terms | strip | json }};
+    const SEARCH_PERFORMED = {{ search.performed | json }};
 
     const initSearchEnhancements = (root) => {
       if (!root || root.dataset.searchEnhanced === 'true') return;
@@ -326,6 +328,14 @@
         lastSubmittedTerm = input.value.trim();
         setLoading(true);
       });
+
+      if (SEARCH_PERFORMED && INITIAL_TERMS) {
+        requestAnimationFrame(() => {
+          input.focus({ preventScroll: true });
+          const len = input.value.length;
+          input.setSelectionRange(len, len);
+        });
+      }
     };
 
     const handleSectionLoad = (event) => {
@@ -334,6 +344,15 @@
         document.getElementById(SECTION_ID);
       initSearchEnhancements(root);
     };
+
+    window.addEventListener('pageshow', () => {
+      const root = document.getElementById(SECTION_ID);
+      const submitButton = root?.querySelector('[data-search-submit]');
+      if (submitButton) {
+        submitButton.classList.remove('search__form-submit--loading');
+        submitButton.disabled = false;
+      }
+    });
 
     document.addEventListener('DOMContentLoaded', () => {
       handleSectionLoad();
