@@ -14,6 +14,7 @@
     "footer": {
       "type": "footer",
       "settings": {
+        "logo_mobile": "shopify://shop_images/footer-logo-mobile.png",
         "shop_title": "SHOP",
         "shop_menu": "primary-menu",
         "contact_title": "CONTACT",
