@@ -1,0 +1,214 @@
+{% if customer %}
+  {% assign first_name = customer.first_name | default: customer.name %}
+  {% assign customer_name = first_name | default: customer.email %}
+  {% assign orders_count = customer.orders_count | default: 0 %}
+  {% assign default_address = customer.default_address %}
+
+  <section class="account">
+    <div class="account__hero">
+      <div class="home__container account__hero-inner">
+        <div class="account__hero-badge">Your account</div>
+        <h1 class="account__hero-title">
+          Hey {{ customer_name | strip | escape }}!
+        </h1>
+        <p class="account__hero-subtitle">
+          Manage your orders, addresses, and profile details from a single place. Need help?
+          <a href="{{ routes.contact_url }}">Contact us</a>.
+        </p>
+
+        <div class="account__quick-stats">
+          <div class="account__quick-card">
+            <span class="account__quick-label">Orders placed</span>
+            <span class="account__quick-value">{{ orders_count }}</span>
+          </div>
+          <div class="account__quick-card">
+            <span class="account__quick-label">Loyalty tier</span>
+            <span class="account__quick-value">
+              {% if customer.tags contains 'vip' %}
+                VIP
+              {% elsif orders_count > 5 %}
+                Insider
+              {% elsif orders_count > 0 %}
+                Explorer
+              {% else %}
+                Newcomer
+              {% endif %}
+            </span>
+          </div>
+          <div class="account__quick-card">
+            <span class="account__quick-label">Member since</span>
+            <span class="account__quick-value">
+              {{ customer.created_at | date: '%b %e, %Y' }}
+            </span>
+          </div>
+        </div>
+
+        <div class="account__hero-actions">
+          <a class="account__hero-button" href="{{ routes.account_addresses_url }}">
+            Manage addresses
+          </a>
+          <a class="account__hero-link" href="{{ routes.account_logout_url }}">
+            Log out
+          </a>
+        </div>
+      </div>
+    </div>
+
+    <div class="account__content">
+      <div class="home__container account__content-inner">
+        <div class="account__layout">
+          <aside class="account__sidebar">
+            <div class="account__profile-card">
+              <h2 class="account__section-title account__section-title--small">Profile overview</h2>
+              <dl class="account__profile-list">
+                <div class="account__profile-row">
+                  <dt>Name</dt>
+                  <dd>{{ customer.name | escape }}</dd>
+                </div>
+                <div class="account__profile-row">
+                  <dt>Email</dt>
+                  <dd>{{ customer.email | escape }}</dd>
+                </div>
+                {% if customer.phone != blank %}
+                  <div class="account__profile-row">
+                    <dt>Phone</dt>
+                    <dd>{{ customer.phone | escape }}</dd>
+                  </div>
+                {% endif %}
+              </dl>
+              <a class="account__profile-action" href="{{ routes.account_url }}?view=profile">
+                Update profile details
+              </a>
+            </div>
+
+          <div class="account__addresses-card">
+              <h2 class="account__section-title account__section-title--small">Default address</h2>
+              {% if default_address %}
+                <address class="account__address">
+                  {{ default_address | format_address }}
+                </address>
+              {% else %}
+                <p class="account__empty-text">You haven't saved a default address yet.</p>
+              {% endif %}
+              <a class="account__profile-action" href="{{ routes.account_addresses_url }}">
+                Edit addresses
+              </a>
+            </div>
+          </aside>
+
+          <div class="account__main">
+            <section class="account__orders">
+              <div class="account__section-heading">
+                <h2 class="account__section-title">Order history</h2>
+                {% if orders_count > 0 %}
+                  <span class="account__section-subtitle">{{ orders_count }} {{ orders_count | pluralize: 'order', 'orders' }}</span>
+                {% endif %}
+              </div>
+
+              {% paginate customer.orders by 8 %}
+                {% if customer.orders_count == 0 %}
+                  <div class="account__empty-state">
+                    <h3 class="account__empty-title">No orders… yet!</h3>
+                    <p class="account__empty-text">
+                      When you place your first order, the full history will show up here.
+                    </p>
+                    <a class="account__empty-button" href="{{ routes.collections_url }}">Start shopping</a>
+                  </div>
+                {% else %}
+                  <div class="account__orders-table">
+                    <div class="account__orders-head">
+                      <span>Order</span>
+                      <span>Date</span>
+                      <span>Payment</span>
+                      <span>Fulfillment</span>
+                      <span>Total</span>
+                      <span class="account__orders-head-action">Details</span>
+                    </div>
+
+                    {% for order in paginate.items %}
+                      {% assign financial_status = order.financial_status | default: 'pending' %}
+                      {% assign financial_label = order.financial_status_label | default: financial_status | replace: '_', ' ' | capitalize %}
+                      {% assign fulfillment_status = order.fulfillment_status | default: 'not_fulfilled' %}
+                      {% assign fulfillment_label = order.fulfillment_status_label | default: fulfillment_status | replace: '_', ' ' | capitalize %}
+                      <div class="account__orders-row">
+                        <span class="account__orders-order">
+                          <span class="account__orders-label">Order</span>
+                          <a href="{{ order.customer_url }}">#{{ order.name }}</a>
+                        </span>
+                        <span class="account__orders-date">
+                          <span class="account__orders-label">Date</span>
+                          {{ order.created_at | date: '%b %e, %Y' }}
+                        </span>
+                        <span class="account__orders-status account__orders-status--payment account__orders-status--{{ financial_status | handleize }}">
+                          <span class="account__orders-label">Payment</span>
+                          {{ financial_label }}
+                        </span>
+                        <span class="account__orders-status account__orders-status--fulfillment account__orders-status--{{ fulfillment_status | handleize }}">
+                          <span class="account__orders-label">Fulfillment</span>
+                          {{ fulfillment_label }}
+                        </span>
+                        <span class="account__orders-total">
+                          <span class="account__orders-label">Total</span>
+                          {{ order.total_price | money }}
+                        </span>
+                        <span class="account__orders-action">
+                          <a href="{{ order.customer_url }}" class="account__orders-link">View</a>
+                        </span>
+                      </div>
+                    {% endfor %}
+                  </div>
+
+                  {% if paginate.pages > 1 %}
+                    <div class="account__pagination">
+                      {{ paginate | default_pagination }}
+                    </div>
+                  {% endif %}
+                {% endif %}
+              {% endpaginate %}
+            </section>
+
+            <section class="account__addresses-mobile">
+              <div class="account__section-heading">
+                <h2 class="account__section-title">Saved addresses</h2>
+                <a class="account__section-link" href="{{ routes.account_addresses_url }}">Manage</a>
+              </div>
+              {% if customer.addresses_count > 0 %}
+                <div class="account__addresses-list">
+                  {% for address in customer.addresses %}
+                    <div class="account__address-card{% if address == default_address %} account__address-card--primary{% endif %}">
+                      {% if address == default_address %}
+                        <span class="account__address-pill">Default</span>
+                      {% endif %}
+                      <address class="account__address">
+                        {{ address | format_address }}
+                      </address>
+                      <div class="account__address-actions">
+                        <a href="{{ routes.account_addresses_url }}#address-{{ address.id }}">Edit</a>
+                      </div>
+                    </div>
+                  {% endfor %}
+                </div>
+              {% else %}
+                <p class="account__empty-text">You haven't added any addresses yet.</p>
+              {% endif %}
+            </section>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+{% else %}
+  <section class="account account--guest">
+    <div class="home__container account__guest-inner">
+      <h1 class="account__hero-title">Account</h1>
+      <p class="account__hero-subtitle">
+        You need to sign in to access your account.
+      </p>
+      <div class="account__hero-actions">
+        <a class="account__hero-button" href="{{ routes.account_login_url }}">Sign in</a>
+        <a class="account__hero-link" href="{{ routes.account_register_url }}">Create account</a>
+      </div>
+    </div>
+  </section>
+{% endif %}
+

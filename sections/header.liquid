@@ -14,7 +14,9 @@
 
     <nav class="header__menu">
       {% for link in section.settings.menu.links %}
-        {{ link.title | link_to: link.url }}
+        <a href="{{ link.url }}" class="header__menu-link{% if link.active %} header__menu-link--active{% endif %}"{% if link.active %} aria-current="page"{% endif %}>
+          {{ link.title }}
+        </a>
       {% endfor %}
     </nav>
 
@@ -63,7 +65,9 @@
       </div>
       <nav class="mobile-menu__nav">
         {% for link in section.settings.menu.links %}
-          {{ link.title | link_to: link.url }}
+          <a href="{{ link.url }}" class="mobile-menu__link{% if link.active %} mobile-menu__link--active{% endif %}"{% if link.active %} aria-current="page"{% endif %} data-mobile-menu-close>
+            {{ link.title }}
+          </a>
         {% endfor %}
       </nav>
 

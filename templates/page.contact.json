@@ -1,10 +1,72 @@
+/*
+ * ------------------------------------------------------------
+ * IMPORTANT: The contents of this file are auto-generated.
+ *
+ * This file may be updated by the Shopify admin theme editor
+ * or related systems. Please exercise caution as any changes
+ * made to this file may be overwritten.
+ * ------------------------------------------------------------
+ */
 {
-    "sections": {
-      "contact_hero": { "type": "contact-hero", "settings": {} },
-      "contact_content": { "type": "contact-content", "settings": {} }
+  "sections": {
+    "contact_hero": {
+      "type": "contact-hero",
+      "settings": {
+        "image": "shopify://shop_images/contact-hero-banner.png",
+        "title": "Contact Us"
+      }
     },
-    "order": [
-      "contact_hero",
-      "contact_content"
-    ]
-  }
+    "contact_content_Wk4fFD": {
+      "type": "contact-content",
+      "blocks": {
+        "intro_cGtGKf": {
+          "type": "intro",
+          "settings": {
+            "text": "<p>We appreciate your business and want to ensure you are satisfied with your GOpure product! Please contact us with any questions you have about the product, or if we can help you in any way.</p>"
+          }
+        },
+        "email_Lqx3xW": {
+          "type": "email",
+          "settings": {
+            "title": "For customer support:",
+            "email": "contact@gopurepod.com"
+          }
+        },
+        "email_n8PDxx": {
+          "type": "email",
+          "settings": {
+            "title": "For sales inquiries:",
+            "email": "jim@blocenterprises.com"
+          }
+        },
+        "email_UTwnCr": {
+          "type": "email",
+          "settings": {
+            "title": "For press inquiries:",
+            "email": "info@blocenterprises.com"
+          }
+        },
+        "address_MGEeqU": {
+          "type": "address",
+          "settings": {
+            "title": "Mailing Address:",
+            "address": "Bloc Enterprises, LLC\n11 Grumman Hill Road, Suite 1A\nWilton, CT 06897"
+          }
+        }
+      },
+      "block_order": [
+        "intro_cGtGKf",
+        "email_Lqx3xW",
+        "email_n8PDxx",
+        "email_UTwnCr",
+        "address_MGEeqU"
+      ],
+      "name": "Contact content",
+      "settings": {}
+    }
+  },
+  "order": [
+    "contact_hero",
+    "contact_content_Wk4fFD"
+  ]
+}

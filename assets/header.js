@@ -111,6 +111,29 @@ document.addEventListener('DOMContentLoaded', () => {
 
     const mq = window.matchMedia('(max-width: 1100px)');
 
+    const getActiveLink = () =>
+      desktopLinks.find(
+        (link) =>
+          link.classList.contains('header__menu-link--active') ||
+          link.getAttribute('aria-current') === 'page'
+      );
+
+    let gliderCurrentLink = null;
+
+    const setGliderLink = (target) => {
+      if (gliderCurrentLink === target) return;
+
+      if (gliderCurrentLink) {
+        gliderCurrentLink.classList.remove('header__menu-link--glider-active');
+      }
+
+      gliderCurrentLink = target || null;
+
+      if (gliderCurrentLink) {
+        gliderCurrentLink.classList.add('header__menu-link--glider-active');
+      }
+    };
+
     const setGlider = (target) => {
       if (!target || mq.matches) return;
       const rect = target.getBoundingClientRect();
@@ -120,10 +143,14 @@ document.addEventListener('DOMContentLoaded', () => {
       glider.style.width = `${rect.width + 8}px`;
       glider.style.transform = `translate3d(${offsetX - 4}px, -50%, 0)`;
       glider.classList.add('is-active');
+      setGliderLink(target);
     };
 
-    const resetGlider = () => {
+    const hideGlider = () => {
       glider.classList.remove('is-active');
+      glider.style.removeProperty('width');
+      glider.style.removeProperty('transform');
+      setGliderLink(null);
     };
 
     const handleEnter = (event) => {
@@ -131,23 +158,44 @@ document.addEventListener('DOMContentLoaded', () => {
       setGlider(target);
     };
 
+    const syncActiveLink = () => {
+      if (mq.matches) {
+        hideGlider();
+        return;
+      }
+
+      const activeLink = getActiveLink();
+      if (activeLink) {
+        setGlider(activeLink);
+      } else {
+        hideGlider();
+      }
+    };
+
     desktopLinks.forEach((link) => {
       link.addEventListener('pointerenter', handleEnter);
       link.addEventListener('focus', handleEnter);
     });
 
-    desktopMenu.addEventListener('pointerleave', resetGlider);
+    desktopMenu.addEventListener('pointerleave', syncActiveLink);
     desktopMenu.addEventListener('blur', (evt) => {
       if (!desktopMenu.contains(evt.relatedTarget)) {
-        resetGlider();
+        syncActiveLink();
       }
     }, true);
 
+    syncActiveLink();
+
     mq.addEventListener('change', (event) => {
       if (event.matches) {
-        glider.classList.remove('is-active');
+        hideGlider();
+        return;
       }
+
+      syncActiveLink();
     });
+
+    window.addEventListener('resize', syncActiveLink);
   }
 
   initDesktopMenuGlider();

@@ -14,10 +14,6 @@
     "header": {
       "type": "header",
       "settings": {
-        "announcement_text": "FREE UNITED KINGDOM SHIPPING $200+",
-        "announcement_link": "",
-        "announcement_bg": "#212322",
-        "announcement_color": "#ffffff",
         "menu": "primary-menu"
       }
     }
