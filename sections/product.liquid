@@ -284,6 +284,49 @@
   </div>
 </div>
 
+<div class="product__modal" data-product-modal aria-hidden="true">
+  <div class="product__modal-overlay" data-product-modal-overlay data-product-modal-close></div>
+  <div
+    class="product__modal-content"
+    role="dialog"
+    aria-modal="true"
+    aria-labelledby="product-modal-title"
+    tabindex="-1"
+  >
+    <button
+      type="button"
+      class="product__modal-close"
+      data-product-modal-close
+      aria-label="Close dialog"
+    >
+      <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <path d="M15 5L5 15M5 5L15 15" stroke="#212322" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" />
+      </svg>
+    </button>
+    <div class="product__modal-body">
+      <div class="product__modal-icon" aria-hidden="true">
+        <svg class="product__modal-icon-svg" viewBox="0 0 48 48" role="presentation">
+          <circle cx="24" cy="24" r="22" fill="none" stroke="#212322" stroke-width="2" />
+          <path d="M24 14V26" stroke="#212322" stroke-width="2" stroke-linecap="round" />
+          <circle cx="24" cy="32" r="1.8" fill="#212322" />
+        </svg>
+      </div>
+      <h3 class="product__modal-title" id="product-modal-title">Heads up</h3>
+      <p class="product__modal-message" data-product-modal-message>
+        Only a limited quantity is available. Your cart was updated accordingly.
+      </p>
+      <button
+        type="button"
+        class="product__modal-button"
+        data-product-modal-close
+        data-product-modal-primary
+      >
+        Got it
+      </button>
+    </div>
+  </div>
+</div>
+
 <script>
   /**
    * Product Page Interactive Script
@@ -335,12 +378,19 @@
       galleryNext: null,
       galleryDots: null,
       sellingFastBadge: null,
+      modal: null,
+      modalOverlay: null,
+      modalCloseButtons: null,
+      modalMessage: null,
+      modalPrimaryAction: null,
+      modalContent: null,
     };
   
     // Application State
     let variants = [];
     let productImages = [];
     let currentImageIndex = 0;
+    let lastFocusedElement = null;
     
     // Gallery drag/swipe state
     let isDragging = false;
@@ -368,6 +418,7 @@
   
         initializeVariants();
         initializeProductImages();
+        initializeModal();
         attachEventListeners();
         updateInitialState();
       } catch (error) {
@@ -394,6 +445,12 @@
       elements.galleryNext = document.querySelector('[data-product-gallery-next]');
       elements.galleryDots = document.querySelectorAll('[data-product-gallery-dot]');
       elements.sellingFastBadge = document.querySelector('[data-product-selling-fast-badge]');
+      elements.modal = document.querySelector('[data-product-modal]');
+      elements.modalOverlay = document.querySelector('[data-product-modal-overlay]');
+      elements.modalCloseButtons = document.querySelectorAll('[data-product-modal-close]');
+      elements.modalMessage = document.querySelector('[data-product-modal-message]');
+      elements.modalPrimaryAction = document.querySelector('[data-product-modal-primary]');
+      elements.modalContent = document.querySelector('.product__modal-content');
       
       // Try multiple ways to find main image
       elements.mainImage = document.querySelector('[data-product-main-image]') ||
@@ -542,6 +599,27 @@
       }
     }
   
+    /**
+     * Initialize modal interactions
+     */
+    function initializeModal() {
+      if (!elements.modal) return;
+
+      const closeButtons = elements.modalCloseButtons
+        ? Array.from(elements.modalCloseButtons)
+        : [];
+
+      closeButtons.forEach((button) => {
+        button.addEventListener('click', closeProductModal);
+      });
+
+      if (elements.modalOverlay) {
+        elements.modalOverlay.addEventListener('click', closeProductModal);
+      }
+
+      document.addEventListener('keydown', handleModalKeydown);
+    }
+
     /**
      * Update initial state on page load
      */
@@ -940,6 +1018,71 @@
     }
 
     /**
+     * Open modal with provided message
+     */
+    function openProductModal(message) {
+      const resolvedMessage =
+        typeof message === 'string' && message.trim().length > 0
+          ? message
+          : 'Something went wrong. Please try again.';
+
+      if (!elements.modal) {
+        window.alert(resolvedMessage);
+        return;
+      }
+
+      lastFocusedElement = document.activeElement instanceof HTMLElement ? document.activeElement : null;
+
+      if (elements.modalMessage) {
+        elements.modalMessage.textContent = resolvedMessage;
+      }
+
+      elements.modal.classList.add('product__modal--active');
+      elements.modal.setAttribute('aria-hidden', 'false');
+      document.body.classList.add('product-modal-open');
+
+      let focusTarget = null;
+      if (elements.modalPrimaryAction && typeof elements.modalPrimaryAction.focus === 'function') {
+        focusTarget = elements.modalPrimaryAction;
+      } else if (elements.modalContent && typeof elements.modalContent.focus === 'function') {
+        focusTarget = elements.modalContent;
+      } else if (elements.modal) {
+        focusTarget = elements.modal.querySelector('button, [href], [tabindex]:not([tabindex="-1"])');
+      }
+
+      if (focusTarget && typeof focusTarget.focus === 'function') {
+        focusTarget.focus();
+      }
+    }
+
+    /**
+     * Close product modal
+     */
+    function closeProductModal() {
+      if (!elements.modal) return;
+
+      elements.modal.classList.remove('product__modal--active');
+      elements.modal.setAttribute('aria-hidden', 'true');
+      document.body.classList.remove('product-modal-open');
+
+      if (lastFocusedElement && typeof lastFocusedElement.focus === 'function') {
+        lastFocusedElement.focus();
+      }
+
+      lastFocusedElement = null;
+    }
+
+    function handleModalKeydown(event) {
+      if (
+        event.key === 'Escape' &&
+        elements.modal &&
+        elements.modal.classList.contains('product__modal--active')
+      ) {
+        closeProductModal();
+      }
+    }
+
+    /**
      * Update size selection UI to match variant
      */
     function updateSizeSelection(variantId) {
@@ -1190,7 +1333,7 @@
      * Show alert message
      */
     function showAlert(message) {
-      alert(message);
+      openProductModal(message);
     }
   
     // ============================================================================
