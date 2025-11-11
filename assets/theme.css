@@ -3680,12 +3680,15 @@ body.mobile-menu-open {
 }
 .product__size-option {
   border-radius: 6px;
-  padding: 16px;
   min-width: 40px;
   height: 40px;
-  padding: 10px 16px;
   border: 1px solid transparent;
   background: #e3e3e3;
+  position: relative;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   font-family: var(--font-family);
   font-weight: 400;
   font-size: 14px;
@@ -3704,8 +3707,24 @@ body.mobile-menu-open {
   color: #212322;
 }
 .product__size-option:disabled {
-  opacity: 0.24;
+  opacity: 0.5;
+  color: #212322;
+  background: #e3e3e3;
   cursor: not-allowed;
+}
+.product__size-option:disabled:hover {
+  border-color: transparent;
+}
+.product__size-option:disabled::after {
+  content: "";
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 150%;
+  height: 2px;
+  background: #fff;
+  transform: translate(-50%, -50%) rotate(-40deg);
+  pointer-events: none;
 }
 .product__quantity-wrapper {
   display: flex;

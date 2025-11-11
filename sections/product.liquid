@@ -174,7 +174,7 @@
                   </div>
                   <div class="product__size-options" data-product-size-options>
                     {% for value in option.values %}
-                      {% comment %} Найти вариант с этим размером {% endcomment %}
+                      
                       {% assign matching_variant = null %}
                       {% for variant in product.variants %}
                         {% if variant.option1 == value or variant.option2 == value or variant.option3 == value %}
@@ -268,7 +268,6 @@
           </details>
         {% endif %}
 
-        {% comment %} Product Features - можно добавить метаполя или использовать description {% endcomment %}
         {% if product.metafields.custom.product_features != blank %}
           <details class="product__details-item">
             <summary class="product__details-summary">Product features</summary>

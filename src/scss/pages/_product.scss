@@ -40,7 +40,7 @@
     }
 
     @media screen and (max-width: 600px) {
-        margin: 0 -16px;
+      margin: 0 -16px;
     }
   }
 
@@ -345,12 +345,16 @@
 
   &__size-option {
     border-radius: 6px;
-    padding: 16px;
     min-width: 40px;
     height: 40px;
-    padding: 10px 16px;
     border: 1px solid transparent;
     background: #e3e3e3;
+    position: relative;
+    overflow: hidden;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
 
     font-family: var(--font-family);
     font-weight: 400;
@@ -373,8 +377,26 @@
     }
 
     &:disabled {
-      opacity: 0.24;
+      opacity: 0.5;
+      color: #212322;
+      background: #e3e3e3;
       cursor: not-allowed;
+
+      &:hover {
+        border-color: transparent;
+      }
+
+      &::after {
+        content: "";
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        width: 150%;
+        height: 2px;
+        background: #fff;
+        transform: translate(-50%, -50%) rotate(-40deg);
+        pointer-events: none;
+      }
     }
   }
 
