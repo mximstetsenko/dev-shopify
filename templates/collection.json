@@ -27,10 +27,23 @@
         "columns_mobile": 1,
         "products_per_page": 24
       }
+    },
+    "recommended_products_pHTHc9": {
+      "type": "recommended-products",
+      "name": "Recommended Products",
+      "settings": {
+        "title": "Recommended",
+        "collection": "",
+        "products_limit": 8,
+        "show_view_all": true,
+        "view_all_text": "View all",
+        "view_all_link": ""
+      }
     }
   },
   "order": [
     "hero",
-    "products"
+    "products",
+    "recommended_products_pHTHc9"
   ]
 }
