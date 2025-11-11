@@ -3507,9 +3507,11 @@ body.mobile-menu-open {
 .product__badge {
   position: absolute;
   top: 4px;
-  left: 0px;
+  left: 0;
   z-index: 4;
-  display: inline-block;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
   padding: 3px 10px;
   background: #212322;
   color: #fafaf8;
@@ -3518,14 +3520,18 @@ body.mobile-menu-open {
   font-size: 12px;
   line-height: 167%;
   text-transform: uppercase;
-  border-radius: 0;
+  border-radius: 0 2px 2px 0;
   pointer-events: none;
 }
 @media screen and (max-width: 600px) {
   .product__badge {
     top: 14px;
     left: 17px;
+    padding: 2px 8px;
   }
+}
+.product__badge[hidden] {
+  display: none;
 }
 .product__gallery-arrow {
   display: none;

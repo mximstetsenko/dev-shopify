@@ -18,10 +18,7 @@
     assign is_sold_out = true
   endunless
 
-  assign show_sale_badge = false
-  if has_discount and is_available
-    assign show_sale_badge = true
-  endif
+  assign selling_fast_threshold = 10
 
   assign variant = product.selected_or_first_available_variant
   assign inventory_qty = 0
@@ -30,14 +27,11 @@
   endif
 
   assign show_selling_fast_badge = false
-  if show_sale_badge
-    assign show_selling_fast_badge = true
-  elsif inventory_qty > 0 and inventory_qty < 10
+  if inventory_qty > 0 and inventory_qty <= selling_fast_threshold
     assign show_selling_fast_badge = true
   endif
 
   if is_sold_out
-    assign show_sale_badge = false
     assign show_selling_fast_badge = false
   endif
 %}
@@ -107,9 +101,16 @@
           {{ 'product-1' | placeholder_svg_tag: 'placeholder-svg' }}
         {% endif %}
 
-        {% if show_selling_fast_badge %}
-          <span class="product__badge">SELLING FAST</span>
-        {% endif %}
+        <span
+          class="product__badge"
+          data-product-selling-fast-badge
+          data-selling-fast-threshold="{{ selling_fast_threshold }}"
+          {% unless show_selling_fast_badge %}
+            hidden
+          {% endunless %}
+        >
+          SELLING FAST
+        </span>
 
         {% if product.images.size > 1 %}
           <div class="product__gallery-dots" data-product-gallery-dots>
@@ -158,6 +159,9 @@
                 data-variant-compare-price="{{ variant.compare_at_price }}"
                 data-variant-available="{{ variant.available }}"
                 data-variant-image="{% if variant.featured_image %}{{ variant.featured_image | image_url: width: 1200 }}{% endif %}"
+                {% if variant.inventory_management %}
+                  data-variant-inventory="{{ variant.inventory_quantity | default: 0 }}"
+                {% endif %}
               >
                 {{ variant.title }}
               </option>
@@ -310,6 +314,7 @@
       CART_API_ENDPOINT: '/cart/add.js',
       DRAG_THRESHOLD: 10,
       SWIPE_THRESHOLD: 50,
+      SELLING_FAST_THRESHOLD: 10,
     };
   
     // DOM Elements Cache
@@ -329,6 +334,7 @@
       galleryPrev: null,
       galleryNext: null,
       galleryDots: null,
+      sellingFastBadge: null,
     };
   
     // Application State
@@ -348,6 +354,13 @@
     function init() {
       try {
         cacheElements();
+        
+        if (elements.sellingFastBadge && elements.sellingFastBadge.dataset.sellingFastThreshold) {
+          const threshold = parseInt(elements.sellingFastBadge.dataset.sellingFastThreshold, 10);
+          if (!Number.isNaN(threshold)) {
+            CONFIG.SELLING_FAST_THRESHOLD = threshold;
+          }
+        }
         
         if (!validateRequiredElements()) {
           return;
@@ -380,6 +393,7 @@
       elements.galleryPrev = document.querySelector('[data-product-gallery-prev]');
       elements.galleryNext = document.querySelector('[data-product-gallery-next]');
       elements.galleryDots = document.querySelectorAll('[data-product-gallery-dot]');
+      elements.sellingFastBadge = document.querySelector('[data-product-selling-fast-badge]');
       
       // Try multiple ways to find main image
       elements.mainImage = document.querySelector('[data-product-main-image]') ||
@@ -400,13 +414,25 @@
     function initializeVariants() {
       if (!elements.variantSelector) return;
   
-      variants = Array.from(elements.variantSelector.options).map((option) => ({
-        id: option.value,
-        price: parseFloat(option.dataset.variantPrice) || 0,
-        comparePrice: parseFloat(option.dataset.variantComparePrice) || null,
-        available: option.dataset.variantAvailable === 'true',
-        image: option.dataset.variantImage || null,
-      }));
+      variants = Array.from(elements.variantSelector.options).map((option) => {
+        const inventoryAttr = option.dataset.variantInventory;
+        let inventory = null;
+        if (typeof inventoryAttr !== 'undefined' && inventoryAttr !== '') {
+          const parsedInventory = parseInt(inventoryAttr, 10);
+          if (!Number.isNaN(parsedInventory)) {
+            inventory = parsedInventory;
+          }
+        }
+
+        return {
+          id: option.value,
+          price: parseFloat(option.dataset.variantPrice) || 0,
+          comparePrice: parseFloat(option.dataset.variantComparePrice) || null,
+          available: option.dataset.variantAvailable === 'true',
+          image: option.dataset.variantImage || null,
+          inventory,
+        };
+      });
     }
   
     /**
@@ -521,9 +547,21 @@
      */
     function updateInitialState() {
       if (elements.variantSelector && variants.length > 0) {
-        const currentVariantIndex = elements.variantSelector.selectedIndex;
-        if (currentVariantIndex >= 0 && variants[currentVariantIndex]) {
-          updatePrice(variants[currentVariantIndex]);
+        let currentVariantIndex = elements.variantSelector.selectedIndex;
+        if (currentVariantIndex < 0) {
+          currentVariantIndex = 0;
+        }
+
+        if (!variants[currentVariantIndex] || !variants[currentVariantIndex].available) {
+          const firstAvailableIndex = variants.findIndex((variant) => variant.available);
+          if (firstAvailableIndex !== -1) {
+            elements.variantSelector.selectedIndex = firstAvailableIndex;
+            currentVariantIndex = firstAvailableIndex;
+          }
+        }
+
+        if (variants[currentVariantIndex]) {
+          updateVariant(currentVariantIndex);
         }
       }
 
@@ -840,6 +878,8 @@
   
       // Update add to cart button
       updateAddToCartButton(variant);
+      updateSellingFastBadge(variant);
+      updateBadges(variant);
   
       // Update main image if variant has specific image
       if (variant.image && elements.mainImage) {
@@ -877,7 +917,28 @@
       elements.addToCartBtn.disabled = !variant.available;
       elements.addToCartBtn.textContent = variant.available ? 'Add to Cart' : 'Sold Out';
     }
-  
+
+    /**
+     * Update selling fast badge visibility
+     */
+    function updateSellingFastBadge(variant) {
+      if (!elements.sellingFastBadge) return;
+
+      const inventory =
+        variant && typeof variant.inventory === 'number' && !Number.isNaN(variant.inventory)
+          ? variant.inventory
+          : null;
+
+      const showBadge =
+        variant &&
+        variant.available &&
+        inventory !== null &&
+        inventory > 0 &&
+        inventory <= CONFIG.SELLING_FAST_THRESHOLD;
+
+      elements.sellingFastBadge.hidden = !showBadge;
+    }
+
     /**
      * Update size selection UI to match variant
      */
