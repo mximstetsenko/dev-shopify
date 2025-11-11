@@ -554,6 +554,44 @@
       });
     }
 
+    function initFilterAccordions() {
+      const filters = Array.from(document.querySelectorAll('.collection__filter'));
+      if (!filters.length) return;
+
+      let openFilter = null;
+
+      filters.forEach((filter) => {
+        const summary = filter.querySelector('.collection__filter-summary');
+        if (!summary) return;
+
+        summary.addEventListener('click', (event) => {
+          event.preventDefault();
+
+          const isOpen = filter.hasAttribute('open');
+
+          if (openFilter && openFilter !== filter) {
+            openFilter.removeAttribute('open');
+            openFilter = null;
+          }
+
+          if (!isOpen) {
+            filter.setAttribute('open', '');
+            openFilter = filter;
+          } else {
+            filter.removeAttribute('open');
+            openFilter = null;
+          }
+        });
+      });
+
+      document.addEventListener('click', (event) => {
+        if (openFilter && !openFilter.contains(event.target)) {
+          openFilter.removeAttribute('open');
+          openFilter = null;
+        }
+      });
+    }
+
     // Handle mobile toolbar toggle
     function initToolbarToggle() {
       const toggleBtn = document.querySelector('[data-toolbar-toggle]');
@@ -588,11 +626,13 @@
         closeAllFilters();
         initCollectionFilters();
         initToolbarToggle();
+        initFilterAccordions();
       });
     } else {
       closeAllFilters();
       initCollectionFilters();
       initToolbarToggle();
+      initFilterAccordions();
     }
   })();
 

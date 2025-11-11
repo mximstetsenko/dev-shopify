@@ -174,7 +174,6 @@
                   </div>
                   <div class="product__size-options" data-product-size-options>
                     {% for value in option.values %}
-                      
                       {% assign matching_variant = null %}
                       {% for variant in product.variants %}
                         {% if variant.option1 == value or variant.option2 == value or variant.option3 == value %}
@@ -260,7 +259,7 @@
       {% comment %} Product Details {% endcomment %}
       <div class="product__details">
         {% if product.description != blank %}
-          <details class="product__details-item">
+          <details class="product__details-item" open>
             <summary class="product__details-summary">Product details</summary>
             <div class="product__details-content">
               {{ product.description }}
@@ -306,9 +305,11 @@
   
     // Configuration
     const CONFIG = {
-      TRANSITION_DURATION: 150,
+      TRANSITION_DURATION: 300,
       SUCCESS_MESSAGE_DURATION: 2000,
       CART_API_ENDPOINT: '/cart/add.js',
+      DRAG_THRESHOLD: 10,
+      SWIPE_THRESHOLD: 50,
     };
   
     // DOM Elements Cache
@@ -334,6 +335,12 @@
     let variants = [];
     let productImages = [];
     let currentImageIndex = 0;
+    
+    // Gallery drag/swipe state
+    let isDragging = false;
+    let startX = 0;
+    let startY = 0;
+    let hasDragged = false;
   
     /**
      * Initialize the product page
@@ -477,6 +484,24 @@
         elements.galleryDots.forEach((dot) => {
           dot.addEventListener('click', handleGalleryDotClick);
         });
+      }
+
+      // Gallery swipe/drag functionality
+      if (elements.galleryMain && productImages.length > 1) {
+        // Mouse events
+        elements.galleryMain.addEventListener('mousedown', handleDragStart);
+        elements.galleryMain.addEventListener('mousemove', handleDragMove);
+        elements.galleryMain.addEventListener('mouseup', handleDragEnd);
+        elements.galleryMain.addEventListener('mouseleave', handleDragEnd);
+        
+        // Touch events
+        elements.galleryMain.addEventListener('touchstart', handleDragStart, { passive: true });
+        elements.galleryMain.addEventListener('touchmove', handleDragMove, { passive: true });
+        elements.galleryMain.addEventListener('touchend', handleDragEnd);
+        elements.galleryMain.addEventListener('touchcancel', handleDragEnd);
+        
+        // Set cursor
+        elements.galleryMain.style.cursor = 'grab';
       }
 
       // Keyboard navigation
@@ -627,6 +652,100 @@
       if (!isNaN(imageIndex) && imageIndex >= 0) {
         goToImage(imageIndex, null, dot);
       }
+    }
+
+    /**
+     * Handle drag/swipe start
+     */
+    function handleDragStart(event) {
+      if (productImages.length <= 1) return;
+      
+      // Don't start drag on buttons
+      if (event.target.closest('button')) {
+        return;
+      }
+
+      isDragging = true;
+      hasDragged = false;
+
+      if (event.type === 'touchstart') {
+        startX = event.touches[0].clientX;
+        startY = event.touches[0].clientY;
+      } else {
+        startX = event.clientX;
+        startY = event.clientY;
+        if (elements.galleryMain) {
+          elements.galleryMain.style.cursor = 'grabbing';
+        }
+      }
+    }
+
+    /**
+     * Handle drag/swipe move
+     */
+    function handleDragMove(event) {
+      if (!isDragging) return;
+
+      let currentX, currentY;
+      
+      if (event.type === 'touchmove') {
+        currentX = event.touches[0].clientX;
+        currentY = event.touches[0].clientY;
+      } else {
+        currentX = event.clientX;
+        currentY = event.clientY;
+      }
+
+      const deltaX = Math.abs(currentX - startX);
+      const deltaY = Math.abs(currentY - startY);
+
+      // Detect if this is a horizontal drag
+      if (deltaX > CONFIG.DRAG_THRESHOLD || deltaY > CONFIG.DRAG_THRESHOLD) {
+        if (deltaX > deltaY) {
+          hasDragged = true;
+        }
+      }
+    }
+
+    /**
+     * Handle drag/swipe end
+     */
+    function handleDragEnd(event) {
+      if (!isDragging) return;
+      
+      if (elements.galleryMain) {
+        elements.galleryMain.style.cursor = 'grab';
+      }
+
+      if (hasDragged) {
+        let endX;
+        
+        if (event.type === 'touchend' || event.type === 'touchcancel') {
+          if (event.changedTouches && event.changedTouches.length > 0) {
+            endX = event.changedTouches[0].clientX;
+          } else {
+            isDragging = false;
+            hasDragged = false;
+            return;
+          }
+        } else {
+          endX = event.clientX;
+        }
+
+        const diff = startX - endX;
+
+        // Swipe left (next image)
+        if (diff > CONFIG.SWIPE_THRESHOLD) {
+          handleGalleryNext(event);
+        }
+        // Swipe right (previous image)
+        else if (diff < -CONFIG.SWIPE_THRESHOLD) {
+          handleGalleryPrev(event);
+        }
+      }
+
+      isDragging = false;
+      hasDragged = false;
     }
 
     /**
@@ -782,16 +901,18 @@
     }
   
     /**
-     * Update main gallery image with transition
+     * Update main gallery image with smooth transition
      */
     function updateMainImage(imageData, activeThumbnail = null, activeDot = null) {
       if (!elements.mainImage || !imageData || !imageData.src) {
         return;
       }
   
+      // Add transitioning class
+      elements.mainImage.classList.add('product__gallery-main-image--transitioning');
+  
       // Fade out
       elements.mainImage.style.opacity = '0';
-      elements.mainImage.style.transition = `opacity ${CONFIG.TRANSITION_DURATION}ms`;
   
       setTimeout(() => {
         // Update image
@@ -804,6 +925,11 @@
   
         // Fade in
         elements.mainImage.style.opacity = '1';
+        
+        // Remove transitioning class after animation
+        setTimeout(() => {
+          elements.mainImage.classList.remove('product__gallery-main-image--transitioning');
+        }, CONFIG.TRANSITION_DURATION);
       }, CONFIG.TRANSITION_DURATION);
   
       // Update active thumbnail
