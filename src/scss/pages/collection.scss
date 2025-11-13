@@ -761,6 +761,8 @@
         position: static;
         opacity: 1;
         visibility: visible;
+        padding-top: 10px;
+        flex-shrink: 0;
       }
     }
 

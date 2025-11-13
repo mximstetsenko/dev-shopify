@@ -2580,6 +2580,8 @@ body.mobile-menu-open {
     position: static;
     opacity: 1;
     visibility: visible;
+    padding-top: 10px;
+    flex-shrink: 0;
   }
 }
 .collection__product-quick-add-form {
@@ -4376,6 +4378,7 @@ body.product-modal-open {
 }
 .recommended__quick-add--mobile {
   display: none;
+  flex-shrink: 0;
 }
 @media screen and (max-width: 1210px) {
   .recommended__quick-add--mobile {
@@ -4383,8 +4386,6 @@ body.product-modal-open {
     position: static;
     opacity: 1;
     visibility: visible;
-    flex-shrink: 0;
-    padding-top: 10px;
   }
 }
 .recommended__item:hover .recommended__quick-add {
