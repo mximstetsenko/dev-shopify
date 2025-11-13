@@ -2442,7 +2442,7 @@ body.mobile-menu-open {
 @media screen and (max-width: 1210px) {
   .collection__product-content {
     display: flex;
-    align-items: center;
+    align-items: flex-start;
     justify-content: space-between;
     gap: 16px;
   }
@@ -4383,6 +4383,8 @@ body.product-modal-open {
     position: static;
     opacity: 1;
     visibility: visible;
+    flex-shrink: 0;
+    padding-top: 10px;
   }
 }
 .recommended__item:hover .recommended__quick-add {

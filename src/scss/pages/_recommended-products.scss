@@ -278,6 +278,8 @@
         position: static;
         opacity: 1;
         visibility: visible;
+        flex-shrink: 0;
+        padding-top: 10px;
       }
     }
   }

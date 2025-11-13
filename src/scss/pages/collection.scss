@@ -611,7 +611,7 @@
   @media screen and (max-width: 1210px) {
     &-content {
       display: flex;
-      align-items: center;
+      align-items: flex-start;
       justify-content: space-between;
       gap: 16px;
     }
