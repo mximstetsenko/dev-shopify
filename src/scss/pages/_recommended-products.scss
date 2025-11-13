@@ -82,7 +82,7 @@
     padding-right: 16px;
     overflow-x: hidden;
 
-    @media screen and (min-width: 1024px) {
+    @media screen and (min-width: 1210px) {
       width: 100%;
       max-width: 100%;
       margin-left: 0;
@@ -198,7 +198,7 @@
     gap: 8px;
     z-index: 2;
 
-    @media screen and (max-width: 834px) {
+    @media screen and (max-width: 1210px) {
       top: 7px;
       left: 0px;
       right: 0px;
@@ -266,14 +266,14 @@
     transition: opacity 0.2s ease, visibility 0.2s ease;
     z-index: 3;
 
-    @media screen and (max-width: 834px) {
+    @media screen and (max-width: 1210px) {
       display: none;
     }
 
     &--mobile {
       display: none;
 
-      @media screen and (max-width: 834px) {
+      @media screen and (max-width: 1210px) {
         display: block;
         position: static;
         opacity: 1;
@@ -328,7 +328,7 @@
       transform: scale(0.98);
     }
 
-    @media screen and (max-width: 834px) {
+    @media screen and (max-width: 1210px) {
       width: auto;
       min-width: auto;
       padding: 6px;
@@ -336,7 +336,7 @@
   }
 
   &__quick-add--mobile {
-    @media screen and (max-width: 834px) {
+    @media screen and (max-width: 1210px) {
       .recommended__quick-add-btn {
         width: auto;
         min-width: auto;
@@ -346,10 +346,11 @@
   }
 
   &__content {
-    @media screen and (max-width: 834px) {
+    @media screen and (max-width: 1210px) {
       display: flex;
       align-items: center;
       justify-content: space-between;
+      gap: 16px;
     }
   }
 
@@ -417,7 +418,7 @@
       padding-right: 16px;
     }
 
-    @media screen and (min-width: 1024px) {
+    @media screen and (min-width: 1210px) {
       width: 100%;
       padding-right: 0;
     }
