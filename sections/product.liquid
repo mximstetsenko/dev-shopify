@@ -397,6 +397,10 @@
     let startX = 0;
     let startY = 0;
     let hasDragged = false;
+    
+    // Image transition state
+    let imageTransitionTimeout = null;
+    let imageTransitionCleanup = null;
   
     /**
      * Initialize the product page
@@ -497,20 +501,27 @@
      */
     function initializeProductImages() {
       if (window.productPageData && window.productPageData.images) {
-        productImages = window.productPageData.images;
+        productImages = window.productPageData.images.map(img => ({
+          src: img.src || '',
+          alt: img.alt || ''
+        })).filter(img => img.src);
       } else {
         // Fallback: try to get images from DOM thumbnails
         if (elements.galleryThumbnails && elements.galleryThumbnails.length > 0) {
           productImages = Array.from(elements.galleryThumbnails).map((thumb) => {
             const img = thumb.querySelector('img');
-            if (!img) return null;
+            if (!img || !img.src) return null;
             
             // Get full-size image URL
             let src = img.src;
-            // Remove size parameters from Shopify CDN URLs
-            src = src.replace(/width=\d+/, 'width=1200');
-            src = src.replace(/_\d+x\d+/, '');
-            src = src.replace(/\?.*$/, '');
+            // Remove existing width parameters
+            src = src.replace(/[?&]width=\d+/, '');
+            // Remove size suffix (e.g., _160x160)
+            src = src.replace(/_\d+x\d+\./, '.');
+            // Remove all query parameters
+            const baseUrl = src.split('?')[0];
+            // Add width parameter properly
+            src = baseUrl + (baseUrl.includes('?') ? '&' : '?') + 'width=1200';
             
             return {
               src: src,
@@ -518,6 +529,20 @@
             };
           }).filter(Boolean);
         }
+      }
+      
+      // Also try to get from main image if available
+      if (productImages.length === 0 && elements.mainImage && elements.mainImage.src) {
+        let src = elements.mainImage.src;
+        src = src.replace(/[?&]width=\d+/, '');
+        src = src.replace(/_\d+x\d+\./, '.');
+        const baseUrl = src.split('?')[0];
+        src = baseUrl + (baseUrl.includes('?') ? '&' : '?') + 'width=1200';
+        
+        productImages = [{
+          src: src,
+          alt: elements.mainImage.alt || ''
+        }];
       }
     }
   
@@ -881,25 +906,56 @@
      * Navigate to specific image
      */
     function goToImage(imageIndex, thumbnail = null, dot = null) {
-      if (!elements.mainImage || imageIndex < 0 || imageIndex >= productImages.length) {
+      if (!elements.mainImage) {
         return;
       }
 
-      currentImageIndex = imageIndex;
+      // Validate image index
+      if (imageIndex < 0) {
+        return;
+      }
 
-      // Get image data
+      // Try to get image from productImages array first
       let imageData = null;
       if (productImages.length > 0 && imageIndex < productImages.length) {
         imageData = productImages[imageIndex];
-      } else {
-        // Fallback: get image from thumbnail if available
-        if (thumbnail) {
-          const thumbnailImg = thumbnail.querySelector('img');
-          if (thumbnailImg) {
+        // Ensure src is valid
+        if (!imageData || !imageData.src) {
+          imageData = null;
+        }
+      }
+
+      // Fallback: get image from thumbnail if productImages doesn't have it
+      if (!imageData && thumbnail) {
+        const thumbnailImg = thumbnail.querySelector('img');
+        if (thumbnailImg && thumbnailImg.src) {
+          let src = thumbnailImg.src;
+          // Convert thumbnail URL to full-size image URL
+          // Remove size parameters and add width=1200
+          src = src.replace(/[?&]width=\d+/, '');
+          src = src.replace(/_\d+x\d+\./, '.');
+          // Add width parameter
+          const separator = src.includes('?') ? '&' : '?';
+          src = src + separator + 'width=1200';
+          
+          imageData = {
+            src: src,
+            alt: thumbnailImg.alt || ''
+          };
+        }
+      }
+
+      // Final fallback: try to get from gallery thumbnails by index
+      if (!imageData && elements.galleryThumbnails && elements.galleryThumbnails.length > imageIndex) {
+        const fallbackThumbnail = elements.galleryThumbnails[imageIndex];
+        if (fallbackThumbnail) {
+          const thumbnailImg = fallbackThumbnail.querySelector('img');
+          if (thumbnailImg && thumbnailImg.src) {
             let src = thumbnailImg.src;
-            src = src.replace(/width=\d+/, 'width=1200');
-            src = src.replace(/_\d+x\d+/, '');
-            src = src.replace(/\?.*$/, '');
+            src = src.replace(/[?&]width=\d+/, '');
+            src = src.replace(/_\d+x\d+\./, '.');
+            const separator = src.includes('?') ? '&' : '?';
+            src = src + separator + 'width=1200';
             
             imageData = {
               src: src,
@@ -910,6 +966,7 @@
       }
 
       if (imageData && imageData.src) {
+        currentImageIndex = imageIndex;
         updateMainImage(imageData, thumbnail, dot);
       }
     }
@@ -957,7 +1014,6 @@
       // Update add to cart button
       updateAddToCartButton(variant);
       updateSellingFastBadge(variant);
-      updateBadges(variant);
   
       // Update main image if variant has specific image
       if (variant.image && elements.mainImage) {
@@ -1111,31 +1167,103 @@
       if (!elements.mainImage || !imageData || !imageData.src) {
         return;
       }
-  
-      // Add transitioning class
-      elements.mainImage.classList.add('product__gallery-main-image--transitioning');
-  
-      // Fade out
-      elements.mainImage.style.opacity = '0';
-  
-      setTimeout(() => {
-        // Update image
-        elements.mainImage.src = imageData.src;
-        elements.mainImage.srcset = imageData.src;
+
+      // Cancel any ongoing transition
+      if (imageTransitionTimeout) {
+        clearTimeout(imageTransitionTimeout);
+        imageTransitionTimeout = null;
+      }
+      if (imageTransitionCleanup) {
+        clearTimeout(imageTransitionCleanup);
+        imageTransitionCleanup = null;
+      }
+
+      // Check if image is already loaded (same src)
+      const currentSrc = elements.mainImage.src || elements.mainImage.getAttribute('src') || '';
+      const newSrc = imageData.src;
+      
+      // If it's the same image, don't do anything
+      if (currentSrc === newSrc || currentSrc.includes(newSrc.split('?')[0]) || newSrc.includes(currentSrc.split('?')[0])) {
+        // Still update UI elements (thumbnails, dots)
+        updateGalleryIndicators(activeThumbnail, activeDot);
+        return;
+      }
+
+      // Preload the new image
+      const img = new Image();
+      let imageLoaded = false;
+      
+      const onImageLoad = () => {
+        if (imageLoaded) return;
+        imageLoaded = true;
         
-        if (imageData.alt) {
-          elements.mainImage.alt = imageData.alt;
-        }
-  
-        // Fade in
-        elements.mainImage.style.opacity = '1';
+        // Add transitioning class
+        elements.mainImage.classList.add('product__gallery-main-image--transitioning');
         
-        // Remove transitioning class after animation
-        setTimeout(() => {
-          elements.mainImage.classList.remove('product__gallery-main-image--transitioning');
+        // Fade out
+        elements.mainImage.style.opacity = '0';
+        
+        imageTransitionTimeout = setTimeout(() => {
+          // Update image only after fade out
+          elements.mainImage.src = newSrc;
+          elements.mainImage.srcset = newSrc;
+          
+          if (imageData.alt) {
+            elements.mainImage.alt = imageData.alt;
+          }
+          
+          // Force browser to use new image
+          elements.mainImage.style.opacity = '0';
+          
+          // Use requestAnimationFrame to ensure DOM update
+          requestAnimationFrame(() => {
+            requestAnimationFrame(() => {
+              // Fade in
+              elements.mainImage.style.opacity = '1';
+              
+              // Remove transitioning class after animation
+              imageTransitionCleanup = setTimeout(() => {
+                elements.mainImage.classList.remove('product__gallery-main-image--transitioning');
+                imageTransitionCleanup = null;
+              }, CONFIG.TRANSITION_DURATION);
+            });
+          });
+          
+          imageTransitionTimeout = null;
         }, CONFIG.TRANSITION_DURATION);
-      }, CONFIG.TRANSITION_DURATION);
-  
+      };
+      
+      const onImageError = () => {
+        if (imageLoaded) return;
+        imageLoaded = true;
+        // If image fails to load, try to update anyway
+        onImageLoad();
+      };
+      
+      img.onload = onImageLoad;
+      img.onerror = onImageError;
+      img.src = newSrc;
+      
+      // If image is already cached, load event might not fire
+      if (img.complete && img.naturalWidth > 0) {
+        onImageLoad();
+      }
+      
+      // Timeout fallback - if image doesn't load in 2 seconds, proceed anyway
+      setTimeout(() => {
+        if (!imageLoaded) {
+          onImageLoad();
+        }
+      }, 2000);
+
+      // Update active thumbnail and dots immediately
+      updateGalleryIndicators(activeThumbnail, activeDot);
+    }
+
+    /**
+     * Update gallery indicators (thumbnails and dots)
+     */
+    function updateGalleryIndicators(activeThumbnail = null, activeDot = null) {
       // Update active thumbnail
       if (elements.galleryThumbnails && elements.galleryThumbnails.length > 0) {
         elements.galleryThumbnails.forEach((thumb) => {
