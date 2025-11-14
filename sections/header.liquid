@@ -1,7 +1,13 @@
 <header class="site-header full-width">
   <div class="home__container header__inner">
     <div class="header__mobile-left">
-      <button class="header__burger" aria-controls="mobile-menu" aria-expanded="false" aria-label="Open menu">
+      <button
+        class="header__burger"
+        aria-controls="mobile-menu"
+        aria-expanded="false"
+        aria-label="Open menu"
+        data-close-label="Close menu"
+      >
         <span></span>
         <span></span>
         <span></span>
@@ -58,10 +64,6 @@
             <span class="header__logo-text__secondary" aria-hidden="true">FITS</span>
           </span>
         </a>
-        <button class="mobile-menu__close" aria-label="Close menu" data-mobile-menu-close>
-          <span></span>
-          <span></span>
-        </button>
       </div>
       <nav class="mobile-menu__nav">
         {% for link in section.settings.menu.links %}

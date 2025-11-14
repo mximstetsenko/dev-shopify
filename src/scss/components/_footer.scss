@@ -1,13 +1,51 @@
+@use "sass:map";
+
+$footer-bg: #212322;
+$footer-text-color: #f1f1f1;
+$footer-contrast-color: #ffffff;
+$footer-border-color: #e3e3e3;
+$footer-breakpoints: (
+  desktop: 1100px,
+  tablet: 768px,
+  mobile: 480px,
+);
+
+@mixin respond-down($breakpoint) {
+  $value: map.get($footer-breakpoints, $breakpoint);
+
+  @if $value {
+    @media screen and (max-width: $value) {
+      @content;
+    }
+  } @else {
+    @warn "Unknown breakpoint `#{$breakpoint}` in respond-down mixin.";
+  }
+}
+
+@mixin footer-text-base {
+  font-weight: 400;
+  font-size: 14px;
+  line-height: 143%;
+  color: $footer-text-color;
+}
+
+@mixin footer-text-small {
+  font-weight: 400;
+  font-size: 12px;
+  line-height: 133%;
+  color: $footer-border-color;
+}
+
 .site-footer {
   position: relative;
   overflow: hidden;
-  background: #212322;
+  background: $footer-bg;
 
   .footer__inner {
     padding: 55px 16px 24px 16px;
     position: relative;
 
-    @media screen and (max-width: 480px) {
+    @include respond-down(mobile) {
       padding: 50px;
     }
   }
@@ -19,15 +57,15 @@
     z-index: 1;
     pointer-events: none;
 
-    @media screen and (max-width: 1100px) {
+    @include respond-down(desktop) {
       left: -50px;
     }
 
-    @media screen and (max-width: 768px) {
+    @include respond-down(tablet) {
       left: -100px;
     }
 
-    @media screen and (max-width: 480px) {
+    @include respond-down(mobile) {
       left: unset;
       right: -130px;
       bottom: unset;
@@ -43,11 +81,11 @@
     z-index: 1;
     pointer-events: none;
 
-    @media screen and (max-width: 1100px) {
+    @include respond-down(desktop) {
       bottom: -50px;
     }
 
-    @media screen and (max-width: 480px) {
+    @include respond-down(mobile) {
       display: none;
     }
   }
@@ -57,22 +95,19 @@
     grid-template-columns: repeat(4, 1fr);
     gap: 80px;
 
-    @media screen and (max-width: 1100px) {
+    @include respond-down(desktop) {
       grid-template-columns: repeat(2, 1fr);
       gap: 40px;
     }
 
-    @media screen and (max-width: 480px) {
+    @include respond-down(mobile) {
       grid-template-columns: 1fr;
       gap: 24px;
     }
   }
 
   .footer__title {
-    font-weight: 400;
-    font-size: 14px;
-    line-height: 143%;
-    color: #f1f1f1;
+    @include footer-text-base;
     text-transform: uppercase;
     margin-bottom: 16px;
   }
@@ -81,10 +116,11 @@
   .footer__list {
     display: grid;
     gap: 8px;
-    font-weight: 400;
-    font-size: 14px;
-    line-height: 143%;
-    color: #f1f1f1;
+    @include footer-text-base;
+  }
+
+  .footer__list li {
+    list-style: none;
   }
 
   .footer__newsletter {
@@ -107,18 +143,12 @@
       min-width: 0;
       padding: 10px 4px;
       background: transparent;
-      border-bottom: 1px solid #e3e3e3;
-      font-weight: 400;
-      font-size: 12px;
-      line-height: 133%;
-      color: #e3e3e3;
+      border-bottom: 1px solid $footer-border-color;
+      @include footer-text-small;
       outline: none;
 
       &::placeholder {
-        font-weight: 400;
-        font-size: 12px;
-        line-height: 133%;
-        color: #e3e3e3;
+        @include footer-text-small;
       }
     }
   }
@@ -135,7 +165,7 @@
     gap: 24px;
     padding-top: 56px;
 
-    @media screen and (max-width: 480px) {
+    @include respond-down(mobile) {
       flex-direction: row;
       padding-top: 30px;
       gap: 16px;
@@ -156,7 +186,7 @@
       line-height: 1;
       text-transform: uppercase;
       letter-spacing: 0.12em;
-      color: #ffffff;
+      color: $footer-contrast-color;
     }
     &-text__secondary {
       font-weight: 600;
@@ -165,7 +195,7 @@
       margin-top: 4px;
       text-transform: uppercase;
       letter-spacing: 0.6em;
-      color: #ffffff;
+      color: $footer-contrast-color;
     }
 
     img {
@@ -179,7 +209,7 @@
     display: none;
   }
 
-  @media screen and (max-width: 768px) {
+  @include respond-down(tablet) {
     .footer__logo-text {
       display: none;
     }
@@ -192,7 +222,7 @@
     font-weight: 400;
     font-size: clamp(0.75rem, 2vw, 0.875rem);
     line-height: 143%;
-    color: #f1f1f1;
+    color: $footer-text-color;
   }
 
   .footer__social-link {

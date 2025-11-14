@@ -1,6 +1,7 @@
 document.addEventListener('DOMContentLoaded', () => {
   const burgerButton = document.querySelector('.header__burger');
   const mobileMenu = document.getElementById('mobile-menu');
+  const mobileMenuHeader = mobileMenu ? mobileMenu.querySelector('.mobile-menu__header') : null;
   const overlay = mobileMenu ? mobileMenu.querySelector('.mobile-menu__overlay') : null;
   const closeButtons = mobileMenu ? mobileMenu.querySelectorAll('[data-mobile-menu-close]') : [];
   const navLinks = mobileMenu ? mobileMenu.querySelectorAll('.mobile-menu__nav a') : [];
@@ -17,6 +18,34 @@ document.addEventListener('DOMContentLoaded', () => {
 
   let focusableElements = [];
   let previouslyFocusedElement = null;
+  const burgerOriginalParent = burgerButton ? burgerButton.parentElement : null;
+  const burgerOriginalNextSibling = burgerButton ? burgerButton.nextElementSibling : null;
+  const burgerOpenLabel = burgerButton ? burgerButton.getAttribute('aria-label') || 'Open menu' : 'Open menu';
+  const burgerCloseLabel = burgerButton
+    ? burgerButton.getAttribute('data-close-label') || 'Close menu'
+    : 'Close menu';
+
+  function moveBurgerToMenuHeader() {
+    if (!burgerButton || !mobileMenuHeader) return;
+    if (mobileMenuHeader.contains(burgerButton)) return;
+    mobileMenuHeader.prepend(burgerButton);
+    burgerButton.classList.add('header__burger--in-menu');
+    burgerButton.setAttribute('aria-label', burgerCloseLabel);
+  }
+
+  function restoreBurgerPosition() {
+    if (!burgerButton || !burgerOriginalParent) return;
+    if (burgerButton.parentElement === burgerOriginalParent) return;
+
+    if (burgerOriginalNextSibling && burgerOriginalParent.contains(burgerOriginalNextSibling)) {
+      burgerOriginalParent.insertBefore(burgerButton, burgerOriginalNextSibling);
+    } else {
+      burgerOriginalParent.insertBefore(burgerButton, burgerOriginalParent.firstChild);
+    }
+
+    burgerButton.classList.remove('header__burger--in-menu');
+    burgerButton.setAttribute('aria-label', burgerOpenLabel);
+  }
 
   function openMenu() {
     if (!mobileMenu) return;
@@ -33,6 +62,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     mobileMenu.setAttribute('aria-hidden', 'false');
+    moveBurgerToMenuHeader();
 
     focusableElements = Array.from(mobileMenu.querySelectorAll(focusableSelectors));
     if (focusableElements.length) {
@@ -53,6 +83,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     mobileMenu.setAttribute('aria-hidden', 'true');
+    restoreBurgerPosition();
 
     document.removeEventListener('keydown', handleKeydown);
     if (previouslyFocusedElement && previouslyFocusedElement.focus) {
@@ -84,7 +115,13 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   if (burgerButton && mobileMenu) {
-    burgerButton.addEventListener('click', openMenu);
+    burgerButton.addEventListener('click', () => {
+      if (mobileMenu.classList.contains('mobile-menu--open')) {
+        closeMenu();
+      } else {
+        openMenu();
+      }
+    });
   }
 
   if (overlay) {

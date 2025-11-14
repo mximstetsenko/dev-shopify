@@ -349,7 +349,7 @@
   &__content {
     @media screen and (max-width: 1210px) {
       display: flex;
-      align-items: center;
+      align-items: flex-start;
       justify-content: space-between;
       gap: 16px;
     }
@@ -417,6 +417,10 @@
     @media screen and (max-width: 768px) {
       margin-top: 40px;
       padding-right: 16px;
+    }
+
+    @media screen and (max-width: 1210px) {
+      padding-right: 0;
     }
 
     @media screen and (min-width: 1210px) {

@@ -227,12 +227,12 @@ a.button,
   display: flex;
   align-items: center;
   position: relative;
-  background: #E3E3E3;
+  background: #e3e3e3;
 }
 @media screen and (max-width: 1100px) {
   .site-header {
     height: 3.375rem;
-    background: #fff;
+    background: #ffffff;
   }
 }
 .site-header .header__inner {
@@ -321,6 +321,9 @@ body.mobile-menu-open {
 }
 .header__burger:hover, .header__burger:focus-visible {
   transform: scale(1.05);
+}
+.header__burger--in-menu {
+  padding: 6px 2px;
 }
 .header__burger--active span:nth-child(1) {
   transform: translateY(6px) rotate(45deg);
@@ -477,35 +480,16 @@ body.mobile-menu-open {
   padding: 20px 20px 18px;
   border-bottom: 1px solid rgba(21, 24, 27, 0.08);
 }
-.mobile-menu__close {
-  position: relative;
-  width: 22px;
-  height: 22px;
-  -webkit-appearance: none;
-     -moz-appearance: none;
-          appearance: none;
-  background: transparent;
-  border: 0;
-  cursor: pointer;
-  transition: transform 240ms ease;
+.mobile-menu__header .header__burger {
+  margin-left: 0;
 }
-.mobile-menu__close:hover, .mobile-menu__close:focus-visible {
-  transform: rotate(90deg);
+.mobile-menu__logo {
+  margin-left: auto;
+  text-decoration: none;
 }
-.mobile-menu__close span {
-  position: absolute;
-  left: 0;
-  top: 50%;
-  width: 100%;
-  height: 2px;
-  background: #212322;
-  transition: background 200ms ease;
-}
-.mobile-menu__close span:first-child {
-  transform: translateY(-50%) rotate(45deg);
-}
-.mobile-menu__close span:last-child {
-  transform: translateY(-50%) rotate(-45deg);
+.mobile-menu__logo .header__logo-text {
+  align-items: flex-end;
+  text-align: right;
 }
 .mobile-menu__nav {
   display: flex;
@@ -607,7 +591,7 @@ body.mobile-menu-open {
 }
 .page__about-us .site-header,
 .page__contact .site-header {
-  background: #fff;
+  background: #ffffff;
 }
 
 @keyframes cartCountPulse {
@@ -729,6 +713,9 @@ body.mobile-menu-open {
   font-size: 14px;
   line-height: 143%;
   color: #f1f1f1;
+}
+.site-footer .footer__list li {
+  list-style: none;
 }
 .site-footer .footer__newsletter {
   display: flex;
@@ -3731,9 +3718,11 @@ body.mobile-menu-open {
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   position: relative;
 }
-.product__gallery-dot:hover {
-  background: #a0a0a0;
-  transform: scale(1.2);
+@media (hover: hover) {
+  .product__gallery-dot:hover {
+    background: #a0a0a0;
+    transform: scale(1.2);
+  }
 }
 .product__gallery-dot--active {
   background: #212322;
@@ -3867,10 +3856,12 @@ body.mobile-menu-open {
   cursor: pointer;
   transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
 }
-.product__size-option:hover {
-  border-color: #212322;
-  transform: translateY(-2px);
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+@media (hover: hover) {
+  .product__size-option:hover {
+    border-color: #212322;
+    transform: translateY(-2px);
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  }
 }
 .product__size-option--selected {
   background: #fafaf8;
@@ -3962,8 +3953,10 @@ body.mobile-menu-open {
   height: 100%;
   transition: transform 0.2s cubic-bezier(0.4, 0, 0.2, 1);
 }
-.product__quantity-btn:hover svg {
-  transform: scale(1.2);
+@media (hover: hover) {
+  .product__quantity-btn:hover svg {
+    transform: scale(1.2);
+  }
 }
 .product__quantity-btn:active svg {
   transform: scale(0.9);
@@ -4022,10 +4015,12 @@ body.mobile-menu-open {
   cursor: pointer;
   transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
 }
-.product__add-to-cart:hover {
-  background: #000000;
-  transform: translateY(-2px);
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+@media (hover: hover) {
+  .product__add-to-cart:hover {
+    background: #000000;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+  }
 }
 .product__add-to-cart:active {
   transform: translateY(0);
@@ -4445,7 +4440,7 @@ body.product-modal-open {
 @media screen and (max-width: 1210px) {
   .recommended__content {
     display: flex;
-    align-items: center;
+    align-items: flex-start;
     justify-content: space-between;
     gap: 16px;
   }
@@ -4505,6 +4500,11 @@ body.product-modal-open {
   .recommended__pagination {
     margin-top: 40px;
     padding-right: 16px;
+  }
+}
+@media screen and (max-width: 1210px) {
+  .recommended__pagination {
+    padding-right: 0;
   }
 }
 @media screen and (min-width: 1210px) {
@@ -5063,7 +5063,7 @@ body.product-modal-open {
   align-items: center;
   justify-content: flex-start;
 }
-@media screen and (max-width: 1100px) {
+@media screen and (max-width: 1210px) {
   .home {
     align-items: flex-start;
   }
